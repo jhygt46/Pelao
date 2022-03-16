@@ -14,6 +14,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -68,21 +69,35 @@ type Data struct {
 	Nombre string `json:"Nombre"`
 }
 
+var imgHandler fasthttp.RequestHandler
+var cssHandler fasthttp.RequestHandler
+var jsHandler fasthttp.RequestHandler
+
 var (
-	imgPrefix = []byte("/img/")
-	//imgHandler = fasthttp.FSHandler("/var/Go/Pelao/img", 1)
-	imgHandler = fasthttp.FSHandler("C:/Pelao/img", 1)
+//imgPrefix = []byte("/img/")
+//imgHandler = fasthttp.FSHandler("/var/Go/Pelao/img", 1)
+//imgHandler = fasthttp.FSHandler("C:/Pelao/img", 1)
 
-	cssPrefix = []byte("/css/")
-	//cssHandler = fasthttp.FSHandler("/var/Go/Pelao/css", 1)
-	cssHandler = fasthttp.FSHandler("C:/Pelao/css", 1)
+//cssPrefix = []byte("/css/")
+//cssHandler = fasthttp.FSHandler("/var/Go/Pelao/css", 1)
+//cssHandler = fasthttp.FSHandler("C:/Pelao/css", 1)
 
-	jsPrefix = []byte("/js/")
-	//jsHandler = fasthttp.FSHandler("/var/Go/Pelao/js", 1)
-	jsHandler = fasthttp.FSHandler("C:/Pelao/js", 1)
+//jsPrefix = []byte("/js/")
+//jsHandler = fasthttp.FSHandler("/var/Go/Pelao/js", 1)
+//jsHandler = fasthttp.FSHandler("C:/Pelao/js", 1)
 )
 
 func main() {
+
+	if runtime.GOOS == "windows" {
+		imgHandler = fasthttp.FSHandler("C:/Pelao/img", 1)
+		cssHandler = fasthttp.FSHandler("C:/Pelao/css", 1)
+		jsHandler = fasthttp.FSHandler("C:/Pelao/js", 1)
+	} else {
+		imgHandler = fasthttp.FSHandler("/var/Pelao/img", 1)
+		cssHandler = fasthttp.FSHandler("/var/Pelao/css", 1)
+		jsHandler = fasthttp.FSHandler("/var/Pelao/js", 1)
+	}
 
 	pass := &MyHandler{Conf: Config{}}
 	con := context.Background()
@@ -121,7 +136,7 @@ func main() {
 		r.POST("/save", Save)
 		r.POST("/delete", Delete)
 		r.POST("/salir", Salir)
-		fasthttp.ListenAndServe(":80", r.Handler)
+		fasthttp.ListenAndServe(":81", r.Handler)
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -348,6 +363,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 	}
 }
 func Index(ctx *fasthttp.RequestCtx) {
+
 	ctx.SetContentType("text/html; charset=utf-8")
 	token := string(ctx.Request.Header.Cookie("cu"))
 	if len(token) > 32 && GetUser(token) {
@@ -585,7 +601,7 @@ func BorrarEmpresa(db *sql.DB, id int) Response {
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
 	h.Conf.Tiempo = 2 * time.Second
-	//fmt.Println("DAEMON")
+	fmt.Println("DAEMON")
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
