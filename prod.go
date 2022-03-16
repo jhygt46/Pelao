@@ -57,6 +57,9 @@ type TemplateConf struct {
 	DelObj          string  `json:"DelObj"`
 	Lista           []Lista `json:"FormDescripcion"`
 }
+type TemplateInicio struct {
+	Titulo string `json:"Titulo"`
+}
 type Lista struct {
 	Id     int    `json:"Id"`
 	Nombre string `json:"Nombre"`
@@ -236,21 +239,90 @@ func Pages(ctx *fasthttp.RequestCtx) {
 	switch name {
 	case "inicioEmpresa":
 
-		id_emp := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 		if Permisos(string(ctx.Request.Header.Cookie("cu")), 1) {
-			fmt.Println("TIENE PERMISOS", id_emp)
+
+			id_emp := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+			obj := TemplateInicio{}
+			aux, found := GetEmpresa(id_emp)
+			if found {
+				obj.Titulo = aux.Nombre
+			}
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
 		}
 
-	case "crear":
+	case "crearEmpresa":
 
 		if SuperAdmin(string(ctx.Request.Header.Cookie("cu"))) {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 
-			t, err := TemplatePage(fmt.Sprintf("html/%s.php", name))
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Titulo", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_empresa", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
+			obj := GetTemplateConf("Crear Empresa", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_empresa", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
+			lista, found := GetEmpresas()
+			if found {
+				obj.Lista = lista
+			}
+
+			if id > 0 {
+				aux, found := GetEmpresa(id)
+				if found {
+					obj.FormNombre = aux.Nombre
+					obj.FormId = id
+				}
+			} else {
+				obj.FormId = 0
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+
+	case "crearPropiedad":
+
+		if SuperAdmin(string(ctx.Request.Header.Cookie("cu"))) {
+
+			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_empresa", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
+			lista, found := GetEmpresas()
+			if found {
+				obj.Lista = lista
+			}
+
+			if id > 0 {
+				aux, found := GetEmpresa(id)
+				if found {
+					obj.FormNombre = aux.Nombre
+					obj.FormId = id
+				}
+			} else {
+				obj.FormId = 0
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+	case "crearMarkers":
+
+		if SuperAdmin(string(ctx.Request.Header.Cookie("cu"))) {
+
+			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_empresa", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
 			lista, found := GetEmpresas()
 			if found {
 				obj.Lista = lista
@@ -278,10 +350,10 @@ func Pages(ctx *fasthttp.RequestCtx) {
 func Index(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("text/html; charset=utf-8")
 	token := string(ctx.Request.Header.Cookie("cu"))
-	if GetUser(token) {
-		fmt.Fprintf(ctx, showFile("html/inicio.php"))
+	if len(token) > 32 && GetUser(token) {
+		fmt.Fprintf(ctx, showFile("html/inicio.html"))
 	} else {
-		fmt.Fprintf(ctx, showFile("html/login.php"))
+		fmt.Fprintf(ctx, showFile("html/login.html"))
 	}
 }
 func Salir(ctx *fasthttp.RequestCtx) {
@@ -303,6 +375,8 @@ func GetMySQLDB() (db *sql.DB, err error) {
 	return
 }
 func GetUser(token string) bool {
+
+	fmt.Println(token)
 
 	db, err := GetMySQLDB()
 	defer db.Close()
