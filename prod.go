@@ -69,22 +69,11 @@ type Data struct {
 	Nombre string `json:"Nombre"`
 }
 
-var imgHandler fasthttp.RequestHandler
-var cssHandler fasthttp.RequestHandler
-var jsHandler fasthttp.RequestHandler
-
 var (
-//imgPrefix = []byte("/img/")
-//imgHandler = fasthttp.FSHandler("/var/Go/Pelao/img", 1)
-//imgHandler = fasthttp.FSHandler("C:/Pelao/img", 1)
-
-//cssPrefix = []byte("/css/")
-//cssHandler = fasthttp.FSHandler("/var/Go/Pelao/css", 1)
-//cssHandler = fasthttp.FSHandler("C:/Pelao/css", 1)
-
-//jsPrefix = []byte("/js/")
-//jsHandler = fasthttp.FSHandler("/var/Go/Pelao/js", 1)
-//jsHandler = fasthttp.FSHandler("C:/Pelao/js", 1)
+	imgHandler fasthttp.RequestHandler
+	cssHandler fasthttp.RequestHandler
+	jsHandler  fasthttp.RequestHandler
+	port       string
 )
 
 func main() {
@@ -93,10 +82,12 @@ func main() {
 		imgHandler = fasthttp.FSHandler("C:/Pelao/img", 1)
 		cssHandler = fasthttp.FSHandler("C:/Pelao/css", 1)
 		jsHandler = fasthttp.FSHandler("C:/Pelao/js", 1)
+		port = ":81"
 	} else {
 		imgHandler = fasthttp.FSHandler("/var/Pelao/img", 1)
 		cssHandler = fasthttp.FSHandler("/var/Pelao/css", 1)
 		jsHandler = fasthttp.FSHandler("/var/Pelao/js", 1)
+		port = ":80"
 	}
 
 	pass := &MyHandler{Conf: Config{}}
@@ -136,7 +127,7 @@ func main() {
 		r.POST("/save", Save)
 		r.POST("/delete", Delete)
 		r.POST("/salir", Salir)
-		fasthttp.ListenAndServe(":81", r.Handler)
+		fasthttp.ListenAndServe(port, r.Handler)
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
