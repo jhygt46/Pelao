@@ -121,7 +121,7 @@ func main() {
 		r.POST("/save", Save)
 		r.POST("/delete", Delete)
 		r.POST("/salir", Salir)
-		fasthttp.ListenAndServe(":81", r.Handler)
+		fasthttp.ListenAndServe(":80", r.Handler)
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -373,6 +373,7 @@ func Img(ctx *fasthttp.RequestCtx) {
 func GetMySQLDB() (db *sql.DB, err error) {
 	db, err = sql.Open("mysql", "root:12345678@tcp(127.0.0.1:3306)/pelao")
 	return
+	//CREATE DATABASE pelao CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
 }
 func GetUser(token string) bool {
 
@@ -584,7 +585,7 @@ func BorrarEmpresa(db *sql.DB, id int) Response {
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
 	h.Conf.Tiempo = 2 * time.Second
-	fmt.Println("DAEMON")
+	//fmt.Println("DAEMON")
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
