@@ -60,17 +60,19 @@ body{
     background: #999;
 }
 .t2{
-    width: 240px;
+    width: 140px;
     height: 40px;
-    background: #999;
     position: absolute;
     top: 50%;
 }
 .t3{
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     right: 10px;
-    background: #999;
+    background-image: url("../img/icons-set.png");
+    background-position: -715px -383px;
+    background-repeat: no-repeat;
+    cursor: pointer;
 }
 .va{
     position: absolute;
@@ -95,7 +97,17 @@ body{
     position: absolute;
     width: 40px;
     height: 40px;
-    background: #f00;
+    background-image: url("../img/icons-set.png");
+    background-repeat: no-repeat;
+}
+.xc1{
+    background-position: 6px -90px;
+}
+.xc2{
+    background-position: 6px -186px;
+}
+.xc3{
+    background-position: -711px -379px;
 }
 .l3{
     font-size: 16px;

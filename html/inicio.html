@@ -11,36 +11,40 @@
         <script type="text/javascript" src="js/sweetalert.min.js"></script>
         <script type="text/javascript" src="js/base_1.js"></script>
     </head>
-    <body>
+    <body onload='{{if .Admin}}navlink("/pages/crearEmpresa"){{else}}navlink("/pages/inicioEmpresa"){{end}}'>
         <div class='c'>
             <div class='t'>
-                <div class='t1 va' onclick='document.getElementsByClassName("l")[0].classList.toggle("co")'></div>
-                <div class='t2'></div>
-                <div class='t3 va'></div>
+                <div class='t2'><img src="img/logo.png" alt="" /></div>
+                <a class='t3 va' href="/salir"></a>
             </div>
             <div class='l'>
+                {{if .Admin}}
                 <div class='l1'>
-                    <div class='l2'></div>
-                    <div class='l3'>Mi Cuenta</div>
+                    <div class='l2 xc1'></div>
+                    <div class='l3'>Administrador</div>
                 </div>
                 <div class='l4' onclick='navlink("/pages/crearEmpresa")'>Crear Empresa</div>
-                <div class='l4' onclick='navlink("/pages/crearPropiedad")'>Crear Propiedad</div>
-                <div class='l4' onclick='navlink("/pages/inicioEmpresa")'>Inicio Empresa</div>
-                <div class='l4' onclick='navlink("/pages/crearMarkers")'>Markers</div>
-            </div>
-            <div class='l'>
+                {{end}}
+                {{if .Idemp}}
                 <div class='l1'>
-                    <div class='l2'></div>
-                    <div class='l3'>Facturacion</div>
+                    <div class='l2 xc2'></div>
+                    <div class='l3'>Inicio</div>
                 </div>
-                <div class='l4' onclick='navlink("/pages/crearEmpresa")'>Crear Empresa</div>
+                <div class='l4' onclick='navlink("/pages/inicioEmpresa")'>Inicio</div>
                 <div class='l4' onclick='navlink("/pages/crearPropiedad")'>Crear Propiedad</div>
-                <div class='l4' onclick='navlink("/pages/inicioEmpresa")'>Inicio Empresa</div>
+                <div class='l1'>
+                    <div class='l2 xc3'></div>
+                    <div class='l3'>Usuarios</div>
+                </div>
+                <div class='l4' onclick='navlink("/pages/crearUsuarios")'>Crear Usuarios</div>
+                <div class='l1'>
+                    <div class='l2 xc3'></div>
+                    <div class='l3'>Otros</div>
+                </div>
                 <div class='l4' onclick='navlink("/pages/crearMarkers")'>Markers</div>
+                {{end}}
             </div>
-            <div class='h'>
-                
-            </div>
+            <div class='h'></div>
         </div>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIXenuYoczpO6oh4uzeOj11b7Nvg8zrFM&libraries=places&v=weekly" async ></script>
     </body>

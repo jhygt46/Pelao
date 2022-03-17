@@ -51,7 +51,7 @@
                 <div class="btns clearfix valign">
                     <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', {{.Id}}, '{{$.DelObj}}', '{{.Nombre}}')"></a>
                     <a title="Modificar" class="icn mod" onclick="navlink('{{$.PageMod}}?id={{.Id}}')"></a>
-                    <a title="Modificar" class="icn ent" onclick="navlink('/pages/inicioEmpresa?id={{.Id}}')"></a>
+                    <a title="SetEmpresa" class="icn ent" href="/SetEmpresa/{{.Id}}"></a>
                 </div>
             </li>
             {{end}}
