@@ -25,6 +25,52 @@
                     <input id="nombre" type="text" value="{{.FormNombre}}" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
+                <div class="checkbox">
+                    <div class="ctitulo">Permisos</div>
+                    <div class="csubtitulo">Propiedades</div>
+                    <div class="cops">
+                        <input id="p0" type="checkbox" {{if .P0}}checked="checked"{{end}} />
+                        <div>Permiso 0</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p1" type="checkbox" {{if .P1}}checked="checked"{{end}}  />
+                        <div>Permiso 1</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p2" type="checkbox" {{if .P2}}checked="checked"{{end}}  />
+                        <div>Permiso 2</div>
+                    </div>
+                    <div class="csubtitulo">Propiedades</div>
+                    <div class="cops">
+                        <input id="p3" type="checkbox" {{if .P3}}checked="checked"{{end}} />
+                        <div>Permiso 3</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p4" type="checkbox" {{if .P4}}checked="checked"{{end}}  />
+                        <div>Permiso 4</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p5" type="checkbox" {{if .P5}}checked="checked"{{end}}  />
+                        <div>Permiso 5</div>
+                    </div>
+                    <div class="csubtitulo">Propiedades</div>
+                    <div class="cops">
+                        <input id="p6" type="checkbox" {{if .P6}}checked="checked"{{end}} />
+                        <div>Permiso 6</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p7" type="checkbox" {{if .P7}}checked="checked"{{end}}  />
+                        <div>Permiso 7</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p8" type="checkbox" {{if .P8}}checked="checked"{{end}}  />
+                        <div>Permiso 8</div>
+                    </div>
+                    <div class="cops">
+                        <input id="p9" type="checkbox" {{if .P9}}checked="checked"{{end}}  />
+                        <div>Permiso 9</div>
+                    </div>
+                </div>
                 <label>
                     <input type="button" onclick="fm(this)" value="Enviar">
                 </label>

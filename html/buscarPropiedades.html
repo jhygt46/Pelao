@@ -1,0 +1,180 @@
+<script>
+
+    var map;
+    var markers = [];
+    
+    var paises = JSON.parse({{.PaisesString}});
+    var regiones = JSON.parse({{.RegionesString}});
+    var ciudades = JSON.parse({{.CiudadesString}});
+    var comunas = JSON.parse({{.ComunasString}});
+    var propiedades = JSON.parse({{.PropiedadesString}});
+    
+    initMap();
+    function initMap() {
+        //var position = { lat: -25.344, lng: 131.036 };
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 6,
+        });
+        drop()     
+    }
+    function clearMarkers() {
+        for (let i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+    }
+    function addMarkerWithTimeout(position, timeout) {
+        window.setTimeout(() => {
+            var marker = new google.maps.Marker({
+                position: position,
+                map,
+                animation: google.maps.Animation.DROP,
+                //index: 789,
+            });
+            attachSecretMessage(marker, position);
+            markers.push(marker);
+        }, timeout);
+    }
+    function addMarker(position) {
+        var marker = new google.maps.Marker({
+            position: position,
+            map,
+            animation: google.maps.Animation.DROP,
+            //index: 789,
+        });
+        attachSecretMessage(marker, position);
+        markers.push(marker);
+    }
+    function drop() {
+
+        clearMarkers();
+
+        for (var i = 0; i < propiedades.length; i++) {
+
+            if (document.getElementById("pais") != null){
+                pais = document.getElementById("pais").value;
+                if (pais > 0 && pais != propiedades[i].Id_pai){
+                    continue;
+                }
+            }
+            if (document.getElementById("region") != null){
+                region = document.getElementById("region").value;
+                if (region > 0 && region != propiedades[i].Id_reg){
+                    continue;
+                }
+            }
+            if (document.getElementById("ciudad") != null){
+                ciudad = document.getElementById("ciudad").value;
+                if (ciudad > 0 && ciudad != propiedades[i].Id_ciu){
+                    continue;
+                }
+            }
+            if (document.getElementById("comuna") != null){
+                comuna = document.getElementById("comuna").value;
+                if (comuna > 0 && comuna != propiedades[i].Id_com){
+                    continue;
+                }
+            }
+            //addMarkerWithTimeout(propiedades[i], i * 200);
+            addMarker(propiedades[i])
+
+        }
+
+        window.setTimeout(() => {
+            map.setZoom(4);
+            map.setCenter({lat: -33.4397852, lng: -70.6169508});
+        }, 500);
+        
+    }
+    function attachSecretMessage(marker, propiedad) {
+
+        //infowindow.close();
+        content = "<div>"+propiedad.Direccion+" "+propiedad.Numero+"</div><div>HOLA MUNDO</div>";
+        var infowindow = new google.maps.InfoWindow({ content: content });
+        infowindow.open(marker.get("map"), marker);
+        marker.addListener("click", () => {
+            
+            infowindow.setContent("<div>Y QUE WA</div><div>HOLA MUNDO</div>");
+            infowindow.open(marker.get("map"), marker);
+
+        });
+
+    }
+
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <li class="back" onclick="backurl()"></li>
+        <li class="back" onclick="backurl()"></li>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign">
+                <li class="back" onclick="backurl()"></li>
+                <li class="back" onclick="backurl()"></li>
+            </ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                {{if gt .PaisesCount 1}}
+                <label>
+                    <span>Pais:</span>
+                    <select id="pais" onchange="drop()">
+                        <option value="0">Todos</option>
+                        {{range .Paises}}
+                        <option value="{{.Id_pai}}">{{.Nombre}}</option>
+                        {{end}}
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                {{end}}
+                {{if gt .RegionesCount 1}}
+                <label>
+                    <span>Region:</span>
+                    <select id="region" onchange="drop()">
+                        <option value="0">Todos</option>
+                        {{range .Regiones}}
+                        <option value="{{.Id_reg}}">{{.Nombre}}</option>
+                        {{end}}
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                {{end}}
+                {{if gt .CiudadesCount 1}}
+                <label>
+                    <span>Ciudades:</span>
+                    <select id="ciudad" onchange="drop()">
+                        <option value="0">Todos</option>
+                        {{range .Ciudades}}
+                        <option value="{{.Id_ciu}}">{{.Nombre}}</option>
+                        {{end}}
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                {{end}}
+                {{if gt .ComunasCount 1}}
+                <label>
+                    <span>Comunas:</span>
+                    <select id="comuna" onchange="drop()">
+                        <option value="0">Todos</option>
+                        {{range .Comunas}}
+                        <option value="{{.Id_com}}">{{.Nombre}}</option>
+                        {{end}}
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                {{end}}
+                <div id="map" style="width:100%; height:400px;"></div>
+                <label>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </label>
+            </fieldset>
+        </form>
+    </div>
+</div>

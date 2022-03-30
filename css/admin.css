@@ -357,6 +357,30 @@ body{
     color: #888;
     text-shadow: 1px 1px 1px #FFF;
 }
+.basic-grey .checkbox {
+    padding-bottom: 10px;
+}
+.basic-grey .checkbox .ctitulo{
+    font-size: 20px;
+}
+.basic-grey .checkbox .csubtitulo{
+    background: #cfcfcf;
+    padding: 5px;
+    margin-top: 5px;
+}
+.basic-grey .checkbox .cops{
+    position: relative;
+    background: #d5d5d5;
+    padding-bottom: 5px;
+}
+.basic-grey .checkbox .cops input{
+    margin-left: 5px;
+}
+.basic-grey .checkbox .cops div{
+    position: absolute;
+    left: 30px;
+    top: 4px;
+}
 .basic-grey label {
     display: block;
     margin: 0px;

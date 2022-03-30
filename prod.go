@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
 	"database/sql"
@@ -15,14 +16,20 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
+	"io/ioutil"
 
 	"github.com/fasthttp/router"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/valyala/fasthttp"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 type Response struct {
@@ -51,14 +58,42 @@ type TemplateConf struct {
 	FormAccion      string  `json:"FormAccion"`
 	FormNombre      string  `json:"FormNombre"`
 	FormDescripcion string  `json:"FormDescripcion"`
+	FormPrecio      float64     `json:"FormPrecio"`
 	TituloLista     string  `json:"TituloLista"`
 	PageMod         string  `json:"PageMod"`
 	DelAccion       string  `json:"DelAccion"`
 	DelObj          string  `json:"DelObj"`
 	Lista           []Lista `json:"FormDescripcion"`
+	Dominio      	int  	`json:"Dominio"`
+	AtencionPublico int 	`json:"AtencionPublico"`
+	Copropiedad 	int 	`json:"Copropiedad"`
+	Destino 		int 	`json:"Destino"`
+	Detalle 		int 	`json:"Detalle"`
+	P0  			bool 	`json:"P0"`
+	P1  			bool 	`json:"P1"`
+	P2  			bool 	`json:"P2"`
+	P3  			bool 	`json:"P3"`
+	P4  			bool 	`json:"P4"`
+	P5  			bool 	`json:"P5"`
+	P6  			bool 	`json:"P6"`
+	P7  			bool 	`json:"P7"`
+	P8  			bool 	`json:"P8"`
+	P9  			bool 	`json:"P9"`
 }
 type TemplateInicio struct {
 	Titulo string `json:"Titulo"`
+}
+type UfRes struct {
+	Version string `json:"version"`
+	Autor string `json:"autor"`
+	Codigo string `json:"codigo"`
+	Nombre string `json:"nombre"`
+	Unidad_medida string `json:"unidad_medida"`
+	Serie []UfSerie `json:"serie"`
+}
+type UfSerie struct {
+	Fecha string `json:"fecha"`
+	Valor float64 `json:"valor"`
 }
 type Lista struct {
 	Id     int    `json:"Id"`
@@ -66,11 +101,85 @@ type Lista struct {
 }
 type Data struct {
 	Nombre string `json:"Nombre"`
+	Direccion string `json:"Direccion"`
+	Lat float64 `json:"Lat"`
+	Lng float64 `json:"Lng"`
+	Dominio int `json:"Dominio"`
+	Precio float64 `json:"Precio"`
+	AtencionPublico int `json:"AtencionPublico"`
+	Copropiedad int `json:"Copropiedad"`
+	Destino int `json:"Destino"`
+	Detalle int `json:"Detalle"`
+	P0 bool `json:"P0"`
+	P1 bool `json:"P1"`
+	P2 bool `json:"P2"`
+	P3 bool `json:"P3"`
+	P4 bool `json:"P4"`
+	P5 bool `json:"P5"`
+	P6 bool `json:"P6"`
+	P7 bool `json:"P7"`
+	P8 bool `json:"P8"`
+	P9 bool `json:"P9"`
 }
 type PermisoUser struct {
 	Bool  bool `json:"Bool"`
 	Admin bool `json:"Admin"`
 	Idemp bool `json:"Idemp"`
+}
+type Localidades struct {
+	Paises []Pais `json:"Paises"`
+	Regiones []Region `json:"Regiones"`
+	Ciudades []Ciudad `json:"Ciudades"`
+	Comunas []Comuna `json:"Comunas"`
+	Propiedades []Propiedad `json:"Propiedades"`
+	Titulo string `json:"Titulo"`
+	SubTitulo string `json:"SubTitulo"`
+	SubTitulo2 string `json:"SubTitulo2"`
+	PaisesString string `json:"PaisesString"`
+	RegionesString string `json:"RegionesString"`
+	CiudadesString string `json:"CiudadesString"`
+	ComunasString string `json:"ComunasString"`
+	PropiedadesString string `json:"PropiedadesString"`
+	PaisesCount int `json:"PaisesCount"`
+	RegionesCount int `json:"RegionesCount"`
+	CiudadesCount int `json:"CiudadesCount"`
+	ComunasCount int `json:"ComunasCount"`
+	PropiedadesCount int `json:"PropiedadesCount"`
+
+}
+type Propiedad struct {
+	Id_pro int `json:"Id_pro"`
+	Nombre string `json:"Nombre"`
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
+	Direccion string `json:"Direccion"`
+	Numero int `json:"Numero"`
+	Id_com int `json:"Id_com"`
+	Id_ciu int `json:"Id_ciu"`
+	Id_reg int `json:"Id_reg"`
+	Id_pai int `json:"Id_pai"`
+}
+type Pais struct {
+	Id_pai int `json:"Id_pai"`
+	Nombre string `json:"Nombre"`
+}
+type Region struct {
+	Id_reg int `json:"Id_reg"`
+	Nombre string `json:"Nombre"`
+	Id_pai int `json:"Id_pai"`
+}
+type Ciudad struct {
+	Id_ciu int `json:"Id_ciu"`
+	Nombre string `json:"Nombre"`
+	Id_reg int `json:"Id_reg"`
+	Id_pai int `json:"Id_pai"`
+}
+type Comuna struct {
+	Id_com int `json:"Id_com"`
+	Nombre string `json:"Nombre"`
+	Id_ciu int `json:"Id_ciu"`
+	Id_reg int `json:"Id_reg"`
+	Id_pai int `json:"Id_pai"`
 }
 
 var (
@@ -82,10 +191,13 @@ var (
 
 func main() {
 
+	//SendEmail()
+	//fmt.Println(GetUF())
+
 	if runtime.GOOS == "windows" {
-		imgHandler = fasthttp.FSHandler("C:/Pelao/img", 1)
-		cssHandler = fasthttp.FSHandler("C:/Pelao/css", 1)
-		jsHandler = fasthttp.FSHandler("C:/Pelao/js", 1)
+		imgHandler = fasthttp.FSHandler("C:/Go/Pelao/img", 1)
+		cssHandler = fasthttp.FSHandler("C:/Go/Pelao/css", 1)
+		jsHandler = fasthttp.FSHandler("C:/Go/Pelao/js", 1)
 		port = ":81"
 	} else {
 		imgHandler = fasthttp.FSHandler("/var/Pelao/img", 1)
@@ -139,7 +251,6 @@ func main() {
 		os.Exit(1)
 	}
 }
-
 func Save(ctx *fasthttp.RequestCtx) {
 
 	resp := Response{}
@@ -154,29 +265,61 @@ func Save(ctx *fasthttp.RequestCtx) {
 
 	switch string(ctx.FormValue("accion")) {
 	case "guardar_empresa":
+
 		nombre := string(ctx.FormValue("nombre"))
+		precio := string(ctx.FormValue("precio"))
 		if id == 0 {
-			resp = InsertEmpresa(db, nombre)
+			resp = InsertEmpresa(db, token, nombre, precio)
 		}
 		if id > 0 {
-			resp = UpdateEmpresa(db, nombre, id)
+			resp = UpdateEmpresa(db, token, id, nombre, precio)
 		}
-	case "guardar_propiedad":
+
+	case "guardar_propiedad1":
+
 		nombre := string(ctx.FormValue("nombre"))
+		lat := string(ctx.FormValue("lat"))
+		lng := string(ctx.FormValue("lng"))
+		comuna := string(ctx.FormValue("comuna"))
+		ciudad := string(ctx.FormValue("ciudad"))
+		region := string(ctx.FormValue("region"))
+		pais := string(ctx.FormValue("pais"))
+		direccion := string(ctx.FormValue("direccion"))
+		numero := string(ctx.FormValue("numero"))
+		dominio := string(ctx.FormValue("dominio"))
+		atencion_publico := string(ctx.FormValue("atencion_publico"))
+		copropiedad := string(ctx.FormValue("copropiedad"))
+		destino := string(ctx.FormValue("destino"))
+		detalle_destino := string(ctx.FormValue("detalle_destino"))
+
 		if id == 0 {
-			resp = InsertPropiedad(db, token, nombre)
+			resp = InsertPropiedad(db, token, nombre, lat, lng, comuna, ciudad, region, pais, direccion, numero, dominio, atencion_publico, copropiedad, destino, detalle_destino)
 		}
 		if id > 0 {
-			resp = UpdatePropiedad(db, nombre, id)
+			resp = UpdatePropiedad1(db, token, id, nombre, lat, lng, comuna, ciudad, region, pais, direccion, numero, dominio, atencion_publico, copropiedad, destino, detalle_destino)
 		}
+
 	case "guardar_usuarios":
+
 		nombre := string(ctx.FormValue("nombre"))
+		p0 := string(ctx.FormValue("p0"))
+		p1 := string(ctx.FormValue("p1"))
+		p2 := string(ctx.FormValue("p2"))
+		p3 := string(ctx.FormValue("p3"))
+		p4 := string(ctx.FormValue("p4"))
+		p5 := string(ctx.FormValue("p5"))
+		p6 := string(ctx.FormValue("p6"))
+		p7 := string(ctx.FormValue("p7"))
+		p8 := string(ctx.FormValue("p8"))
+		p9 := string(ctx.FormValue("p9"))
+
 		if id == 0 {
-			resp = InsertUsuario(db, token, nombre)
+			resp = InsertUsuario(db, token, nombre, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 		}
 		if id > 0 {
-			resp = UpdateUsuario(db, nombre, id)
+			resp = UpdateUsuario(db, token, id, nombre, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 		}
+
 	default:
 
 	}
@@ -185,19 +328,23 @@ func Save(ctx *fasthttp.RequestCtx) {
 }
 func Delete(ctx *fasthttp.RequestCtx) {
 
-	ctx.Response.Header.Set("Content-Type", "application/json")
-	id := Read_uint32bytes(ctx.FormValue("id"))
 	resp := Response{}
 
+	ctx.Response.Header.Set("Content-Type", "application/json")
+	id := Read_uint32bytes(ctx.FormValue("id"))
+	token := string(ctx.Request.Header.Cookie("cu"))
+	
 	db, err := GetMySQLDB()
 	defer db.Close()
 	ErrorCheck(err)
 
 	switch string(ctx.FormValue("accion")) {
 	case "borrar_empresa":
-
-		resp = BorrarEmpresa(db, id)
-
+		resp = BorrarEmpresa(db, token, id)
+	case "borrar_propiedad":
+		resp = BorrarPropiedad(db, token, id)
+	case "borrar_usuarios":
+		resp = BorrarUsuario(db, token, id)
 	default:
 
 	}
@@ -237,6 +384,7 @@ func Login(ctx *fasthttp.RequestCtx) {
 
 			stmt, err := db.Prepare("INSERT INTO sesiones(cookie, id_usr, fecha) VALUES(?,?, NOW())")
 			ErrorCheck(err)
+			defer stmt.Close()
 			stmt.Exec(cookie, id_usr)
 
 			authcookie := CreateCookie("cu", cookieset, 94608000)
@@ -261,7 +409,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 	switch name {
 	case "inicioEmpresa":
 
-		if Permisos(token, 1) {
+		if found, _ := Permisos(token, 1); found {
 
 			id_emp := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
@@ -281,7 +429,6 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if SuperAdmin(token) {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
@@ -293,8 +440,10 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			if id > 0 {
 				aux, found := GetEmpresa(id)
+				fmt.Println(aux.Precio)
 				if found {
 					obj.FormNombre = aux.Nombre
+					obj.FormPrecio = aux.Precio
 					obj.FormId = id
 				}
 			} else {
@@ -308,80 +457,121 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 	case "crearUsuarios":
 
-		id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-
-		t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
-		ErrorCheck(err)
-
-		obj := GetTemplateConf("Crear Usuarios", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "guardar_usuarios", fmt.Sprintf("/pages/%s", name), "borrar_usuario", "Usuario")
-		lista, found := GetUsuarios(token)
-		if found {
-			obj.Lista = lista
-		}
-
-		if id > 0 {
-			aux, found := GetUsuario(token, id)
-			if found {
-				obj.FormNombre = aux.Nombre
-				obj.FormId = id
-			}
-		} else {
-			obj.FormId = 0
-		}
-
-		err = t.Execute(ctx, obj)
-		ErrorCheck(err)
-
-	case "crearPropiedad":
-
-		id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-
-		t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
-		ErrorCheck(err)
-
-		obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
-		lista, found := GetPropiedades(token)
-		if found {
-			obj.Lista = lista
-		}
-
-		if id > 0 {
-			aux, found := GetPropiedad(token, id)
-			if found {
-				obj.FormNombre = aux.Nombre
-				obj.FormId = id
-			}
-		} else {
-			obj.FormId = 0
-		}
-
-		err = t.Execute(ctx, obj)
-		ErrorCheck(err)
-
-	case "crearMarkers":
-
-		if SuperAdmin(string(ctx.Request.Header.Cookie("cu"))) {
+		if found, _ := Permisos(token, 1); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_empresa", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
-			lista, found := GetEmpresas()
+			obj := GetTemplateConf("Crear Usuarios", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "guardar_usuarios", fmt.Sprintf("/pages/%s", name), "borrar_usuario", "Usuario")
+			lista, found := GetUsuarios(token)
 			if found {
 				obj.Lista = lista
 			}
 
 			if id > 0 {
-				aux, found := GetEmpresa(id)
+				aux, found := GetUsuario(token, id)
 				if found {
 					obj.FormNombre = aux.Nombre
 					obj.FormId = id
+
+					obj.P0 = aux.P0
+					obj.P1 = aux.P1
+					obj.P2 = aux.P2
+					obj.P3 = aux.P3
+					obj.P4 = aux.P4
+					obj.P5 = aux.P5
+					obj.P6 = aux.P6
+					obj.P7 = aux.P7
+					obj.P8 = aux.P8
+					obj.P9 = aux.P9
+
 				}
 			} else {
 				obj.FormId = 0
 			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+
+	case "crearPropiedad":
+
+		if found, _ := Permisos(token, 1); found {
+
+			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
+			lista, found := GetPropiedades(token)
+			if found {
+				obj.Lista = lista
+			}
+
+			if id > 0 {
+				aux, found := GetPropiedad(token, id)
+				if found {
+					obj.FormNombre = aux.Nombre
+					obj.FormId = id
+					obj.Dominio = 1
+					obj.AtencionPublico = 1
+					obj.Copropiedad = 1
+					obj.Destino = 1
+					obj.Detalle = 1
+				}
+			} else {
+				obj.FormId = 0
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+
+	case "buscarPropiedades":
+
+		if found, id_emp := Permisos(token, 1); found {
+
+			db, err := GetMySQLDB()
+			defer db.Close()
+			ErrorCheck(err)
+
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetLocalidades(db, id_emp)
+
+			obj.PaisesCount = len(obj.Paises)
+			obj.RegionesCount = len(obj.Regiones)
+			obj.CiudadesCount = len(obj.Ciudades)
+			obj.ComunasCount = len(obj.Comunas)
+			obj.PropiedadesCount = len(obj.Propiedades)
+
+			paises, err := json.Marshal(obj.Paises)
+			ErrorCheck(err)
+			obj.PaisesString = string(paises)
+
+			regiones, err := json.Marshal(obj.Regiones)
+			ErrorCheck(err)
+			obj.RegionesString = string(regiones)
+
+			ciudades, err := json.Marshal(obj.Ciudades)
+			ErrorCheck(err)
+			obj.CiudadesString = string(ciudades)
+
+			comunas, err := json.Marshal(obj.Comunas)
+			ErrorCheck(err)
+			obj.ComunasString = string(comunas)
+
+			propiedades, err := json.Marshal(obj.Propiedades)
+			ErrorCheck(err)
+			obj.PropiedadesString = string(propiedades)
+
+			obj.Titulo = "Titulo"
+			obj.SubTitulo = "Subtitulo"
+			obj.SubTitulo2 = "Subtitulo2"
 
 			err = t.Execute(ctx, obj)
 			ErrorCheck(err)
@@ -394,6 +584,8 @@ func Pages(ctx *fasthttp.RequestCtx) {
 }
 func Index(ctx *fasthttp.RequestCtx) {
 
+	//SendEmail()
+	SendEmail2()
 	ctx.SetContentType("text/html; charset=utf-8")
 	token := string(ctx.Request.Header.Cookie("cu"))
 	gpu := GetPermisoUser(token)
@@ -517,59 +709,32 @@ func GetUser(token string) bool {
 		return false
 	}
 }
-func Permisos(token string, n int) bool {
-
-	tkn := token[0:32]
-	id_emp, err := strconv.Atoi(token[32:len(token)])
-	ErrorCheck(err)
+func Permisos(token string, n int) (bool, int) {
 
 	db, err := GetMySQLDB()
 	defer db.Close()
 	ErrorCheck(err)
 
-	res, err := db.Query("SELECT t1.id_emp, t1.admin FROM usuarios t1, sesiones t2, usuario_perfil t3, perfil_tarea t4 WHERE t2.cookie = ? AND t2.id_usr=t1.id_usr AND t1.id_usr=t3.id_usr AND t3.id_per=t4.id_per AND t4.id_tar=?", tkn, n)
+	sql := fmt.Sprintf("SELECT t1.p%v, t1.id_emp, t1.admin FROM usuarios t1, sesiones t2 WHERE t2.cookie = ? AND t2.id_usr=t1.id_usr", n)
+
+	res, err := db.Query(sql, token)
 	defer res.Close()
 	ErrorCheck(err)
 
-	var id int
+	var p int
+	var id_emp int
 	var admin int
 
 	if res.Next() {
 
-		err := res.Scan(&id, &admin)
+		err := res.Scan(&p, &id_emp, &admin)
 		ErrorCheck(err)
-		if id == id_emp || admin == 1 {
-			return true
-		}
-
-	} else {
-
-		res3, err3 := db.Query("SELECT * FROM usuarios t1, sesiones t2 WHERE t2.cookie = ? AND t2.id_usr=t1.id_usr AND t1.admin=1", tkn)
-		defer res3.Close()
-		ErrorCheck(err3)
-		if res3.Next() {
-			return true
-		} else {
-
-			res2, err2 := db.Query("SELECT t1.id_emp, t1.admin FROM usuarios t1, sesiones t2, usuario_tarea t3 WHERE t2.cookie = ? AND t2.id_usr=t1.id_usr AND t1.id_usr=t3.id_usr AND t3.id_tar=?", tkn, n)
-			defer res2.Close()
-			ErrorCheck(err2)
-			if res2.Next() {
-
-				err := res.Scan(&id, &admin)
-				ErrorCheck(err)
-				if id == id_emp {
-					return true
-				}
-
-			} else {
-				return false
-			}
-
+		if p == 1 || admin == 1 {
+			return true, id_emp
 		}
 
 	}
-	return false
+	return false, 0
 }
 func SuperAdmin(token string) bool {
 
@@ -597,7 +762,7 @@ func GetEmpresa(id int) (Data, bool) {
 	ErrorCheck(err)
 
 	cn := 0
-	res, err := db.Query("SELECT nombre FROM empresa WHERE id_emp = ? AND eliminado = ?", id, cn)
+	res, err := db.Query("SELECT nombre, precio FROM empresa WHERE id_emp = ? AND eliminado = ?", id, cn)
 	defer res.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -605,11 +770,13 @@ func GetEmpresa(id int) (Data, bool) {
 	if res.Next() {
 
 		var nombre string
-		err := res.Scan(&nombre)
+		var precio float64
+		err := res.Scan(&nombre, &precio)
 		if err != nil {
 			log.Fatal(err)
 		}
 		data.Nombre = nombre
+		data.Precio = precio
 		return data, true
 
 	} else {
@@ -710,7 +877,7 @@ func GetUsuario(token string, id int) (Data, bool) {
 	ErrorCheck(err)
 
 	cn := 0
-	res, err := db.Query("SELECT user FROM usuarios WHERE id_usr = ? AND eliminado = ? AND id_emp = ?", id, cn, GetIdEmp(token))
+	res, err := db.Query("SELECT user, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9 FROM usuarios WHERE id_usr = ? AND eliminado = ? AND id_emp = ?", id, cn, GetIdEmp(token))
 	defer res.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -718,11 +885,33 @@ func GetUsuario(token string, id int) (Data, bool) {
 	if res.Next() {
 
 		var user string
-		err := res.Scan(&user)
+		var p0 bool
+		var p1 bool
+		var p2 bool
+		var p3 bool
+		var p4 bool
+		var p5 bool
+		var p6 bool
+		var p7 bool
+		var p8 bool
+		var p9 bool
+
+		err := res.Scan(&user, &p0, &p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8, &p9)
 		if err != nil {
 			log.Fatal(err)
 		}
 		data.Nombre = user
+		data.P0 = p0
+		data.P1 = p1
+		data.P2 = p2
+		data.P3 = p3
+		data.P4 = p4
+		data.P5 = p5
+		data.P6 = p6
+		data.P7 = p7
+		data.P8 = p8
+		data.P9 = p9
+
 		return data, true
 
 	} else {
@@ -746,7 +935,7 @@ func GetPropiedades(token string) ([]Lista, bool) {
 		log.Fatal(err)
 	}
 
-	if res.Next() {
+	for res.Next() {
 
 		var id_pro int
 		var nombre string
@@ -769,7 +958,7 @@ func GetPropiedad(token string, id int) (Data, bool) {
 	ErrorCheck(err)
 
 	cn := 0
-	res, err := db.Query("SELECT nombre FROM propiedades WHERE id_pro = ? AND eliminado = ? AND id_emp = ?", id, cn, GetIdEmp(token))
+	res, err := db.Query("SELECT nombre, direccion, lat, lng, dominio FROM propiedades WHERE id_pro = ? AND eliminado = ? AND id_emp = ?", id, cn, GetIdEmp(token))
 	defer res.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -777,11 +966,19 @@ func GetPropiedad(token string, id int) (Data, bool) {
 	if res.Next() {
 
 		var nombre string
-		err := res.Scan(&nombre)
+		var direccion string
+		var lat float64
+		var lng float64
+		var dominio int
+		err := res.Scan(&nombre, &direccion, &lat, &lng, &dominio)
 		if err != nil {
 			log.Fatal(err)
 		}
 		data.Nombre = nombre
+		data.Direccion = direccion
+		data.Lat = lat
+		data.Lng = lng
+		data.Dominio = dominio
 		return data, true
 
 	} else {
@@ -789,69 +986,284 @@ func GetPropiedad(token string, id int) (Data, bool) {
 	}
 }
 
-func InsertPropiedad(db *sql.DB, token string, nombre string) Response {
+func GetUF() int {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+	
+	cn := 1
+	res, err := db.Query("SELECT valor, ano, mes, dia FROM uf WHERE id = ?", cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var valor int
+	var ano int
+	var mes int
+	var dia int
+
+	if res.Next() {
+
+		err := res.Scan(&valor, &ano, &mes, &dia)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		start := time.Date(ano, GetMonth(mes - 1), dia, 0, 0, 0, 0, time.UTC)
+		duration := time.Now().Sub(start)
+		if int(duration.Hours()/24) > 0 {
+
+			val, ok := GetHttpUF()
+			if ok {
+				valor = val
+				UpdateUF(val)
+			}
+
+		}  
+
+	}
+	return valor
+}
+func GetHttpUF() (int, bool) {
+
+	req := fasthttp.AcquireRequest()
+    defer fasthttp.ReleaseRequest(req)
+    req.SetRequestURI("https://mindicador.cl/api/uf")
+
+	resp := fasthttp.AcquireResponse()
+    defer fasthttp.ReleaseResponse(resp)
+
+	err := fasthttp.Do(req, resp)
+    if err != nil {
+        fmt.Printf("Client get failed: %s\n", err)
+        return 0, false
+    }
+	if resp.StatusCode() != fasthttp.StatusOK {
+        fmt.Printf("Expected status code %d but got %d\n", fasthttp.StatusOK, resp.StatusCode())
+        return 0, false
+    }
+	var res UfRes
+	body := resp.Body()
+	
+	if err := json.Unmarshal(body, &res); err == nil {
+		return int(res.Serie[0].Valor), true
+	}else{
+		fmt.Println(err)
+		return 0, false
+	}
+
+}
+func UpdateUF(valor int){
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	year, month, day := time.Now().Date()
+
+	id := 1
+	stmt, err := db.Prepare("UPDATE uf SET valor = ?, ano = ?, mes = ?, dia = ? WHERE id = ?")
+	ErrorCheck(err)
+	_, e := stmt.Exec(valor, year, int(month), day, id)
+	ErrorCheck(e)
+
+}
+
+func GetLocalidades(db *sql.DB, id_emp int) Localidades {
+
+	paises := []Pais{}
+	regiones := []Region{}
+	ciudades := []Ciudad{}
+	comunas := []Comuna{}
+	propiedades := []Propiedad{}
+
+	res1, err := db.Query("SELECT DISTINCT(t1.id_pai), t1.nombre FROM paises t1, propiedades t2 WHERE t2.id_emp = ? AND t2.id_pai=t1.id_pai", id_emp)
+	defer res1.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var id_pai int
+	var nombrepais string
+
+	for res1.Next() {
+		err := res1.Scan(&id_pai, &nombrepais)
+		if err != nil {
+			log.Fatal(err)
+		}
+		paises = append(paises, Pais{Id_pai: id_pai, Nombre: nombrepais})
+	}
+
+	res2, err := db.Query("SELECT DISTINCT(t1.id_reg), t1.nombre, t1.id_pai FROM regiones t1, propiedades t2 WHERE t2.id_emp = ? AND t2.id_reg=t1.id_reg", id_emp)
+	defer res2.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var id_reg int
+	var nombreregion string
+
+	for res2.Next() {
+		err := res2.Scan(&id_reg, &nombreregion, &id_pai)
+		if err != nil {
+			log.Fatal(err)
+		}
+		regiones = append(regiones, Region{Id_reg: id_reg, Nombre: nombreregion, Id_pai: id_pai})
+	}
+
+	res3, err := db.Query("SELECT DISTINCT(t1.id_ciu), t1.nombre, t1.id_reg, t1.id_pai FROM ciudades t1, propiedades t2 WHERE t2.id_emp = ? AND t2.id_ciu=t1.id_ciu", id_emp)
+	defer res3.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var id_ciu int
+	var nombreciudad string
+
+	for res3.Next() {
+		err := res3.Scan(&id_ciu, &nombreciudad, &id_reg, &id_pai)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ciudades = append(ciudades, Ciudad{Id_ciu: id_ciu, Nombre: nombreciudad, Id_reg: id_reg, Id_pai: id_pai})
+	}
+
+	res4, err := db.Query("SELECT DISTINCT(t1.id_com), t1.nombre, t1.id_ciu, t1.id_reg, t1.id_pai FROM comunas t1, propiedades t2 WHERE t2.id_emp = ? AND t2.id_com=t1.id_com", id_emp)
+	defer res4.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var id_com int
+	var nombrecomuna string
+
+	for res4.Next() {
+		err := res4.Scan(&id_com, &nombrecomuna, &id_ciu, &id_reg, &id_pai)
+		if err != nil {
+			log.Fatal(err)
+		}
+		comunas = append(comunas, Comuna{Id_com: id_com, Nombre: nombrecomuna, Id_ciu: id_ciu, Id_reg: id_reg, Id_pai: id_pai})
+	}
+
+	cn := 0
+	res0, err := db.Query("SELECT id_pro, nombre, lat, lng, direccion, numero, id_com, id_ciu, id_reg, id_pai FROM propiedades WHERE eliminado = ? AND id_emp = ?", cn, id_emp)
+	defer res0.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var id_pro int
+	var nombrepropiedad string
+	var lat float64
+	var lng float64
+	var direccion string
+	var numero int
+
+	for res0.Next() {
+		err := res0.Scan(&id_pro, &nombrepropiedad, &lat, &lng, &direccion, &numero, &id_com, &id_ciu, &id_reg, &id_pai)
+		if err != nil {
+			log.Fatal(err)
+		}
+		propiedades = append(propiedades, Propiedad{Id_pro: id_pro, Nombre: nombrepropiedad, Lat: lat, Lng: lng, Direccion: direccion, Numero: numero, Id_com: id_com, Id_ciu: id_ciu, Id_reg: id_reg, Id_pai: id_pai})
+	}
+
+
+	return Localidades{ Paises: paises, Regiones: regiones, Ciudades: ciudades, Comunas: comunas, Propiedades: propiedades }
+
+}
+
+func InsertPropiedad(db *sql.DB, token string, nombre string, lat string, lng string, comuna string, ciudad string, region string, pais string, direccion string, numero string, dominio string, atencion_publico string, copropiedad string, destino string, detalle_destino string) Response {
 
 	resp := Response{}
-	stmt, err := db.Prepare("INSERT INTO propiedades (nombre, id_emp) VALUES (?,?)")
-	ErrorCheck(err)
-	stmt.Exec(nombre, GetIdEmp(token))
-	if err == nil {
-		resp.Op = 1
-		resp.Reload = 1
-		resp.Page = "crearPropiedad"
-		resp.Msg = "Propiedad ingresada correctamente"
-	} else {
-		resp.Op = 2
-		resp.Msg = "La Propiedad no pudo ser ingresada"
+	resp.Op = 2
+	if found, id_emp := Permisos(token, 1); found {
+
+		id_pai, b1 := GetPais(db, pais)
+		id_reg, b2 := GetRegion(db, region, id_pai)
+		id_ciu, b3 := GetCiudad(db, ciudad, id_pai, id_reg)
+		id_com, b4 := GetComuna(db, comuna, id_pai, id_reg, id_ciu)
+
+		if b1 && b2 && b3 && b4 {
+			stmt, err := db.Prepare("INSERT INTO propiedades (nombre, lat, lng, id_ciu, id_com, id_reg, id_pai, direccion, numero, dominio, atencion_publico, copropiedad, destino, detalle_destino, id_emp) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+			ErrorCheck(err)
+			defer stmt.Close()
+			stmt.Exec(nombre, lat, lng, id_ciu, id_com, id_reg, id_pai, direccion, numero, dominio, atencion_publico, copropiedad, destino, detalle_destino, id_emp)
+			if err == nil {
+				resp.Op = 1
+				resp.Reload = 1
+				resp.Page = "crearPropiedad"
+				resp.Msg = "Propiedad ingresada correctamente"
+			} else {
+				resp.Msg = "La Propiedad no pudo ser ingresada"
+			}
+		}else{
+			resp.Msg = "Error al ingresar posicion"
+		}
+		
+	}else{
+		resp.Msg = "No tiene permisos"
 	}
 	return resp
 }
-func UpdatePropiedad(db *sql.DB, nombre string, id int) Response {
+func UpdatePropiedad1(db *sql.DB, token string, id int, nombre string, lat string, lng string, comuna string, ciudad string, region string, pais string, direccion string, numero string, dominio string, atencion_publico string, copropiedad string, destino string, detalle_destino string) Response {
 
 	resp := Response{}
-	stmt, err := db.Prepare("UPDATE propiedades SET nombre = ? WHERE id_pro = ?")
-	ErrorCheck(err)
-	_, e := stmt.Exec(nombre, id)
-	ErrorCheck(e)
-	if e == nil {
-		resp.Op = 1
-		resp.Reload = 1
-		resp.Page = "crearPropiedad"
-		resp.Msg = "Empresa actualizada correctamente"
-	} else {
-		resp.Op = 2
-		resp.Msg = "La empresa no pudo ser actualizada"
+	resp.Op = 2
+	if found, id_emp := Permisos(token, 1); found {
+		stmt, err := db.Prepare("UPDATE propiedades SET nombre = ?, lat = ?, lng = ?, ciudad = ?, comuna = ?, region = ?, pais = ?, direccion = ?, numero = ?, dominio = ?, atencion_publico = ?, copropiedad = ?, destino = ?, detalle_destino = ? WHERE id_pro = ? AND id_emp = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(nombre, lat, lng, ciudad, comuna, region, pais, direccion, numero, dominio, atencion_publico, copropiedad, destino, detalle_destino, id, id_emp)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "crearPropiedad"
+			resp.Msg = "Empresa actualizada correctamente"
+		} else {
+			resp.Msg = "La empresa no pudo ser actualizada"
+		}
+	}else{
+		resp.Msg = "No tiene permisos"
 	}
 	return resp
 }
-func BorrarPropiedad(db *sql.DB, id int) Response {
+func BorrarPropiedad(db *sql.DB, token string, id int) Response {
 
-	del := 1
 	resp := Response{}
-	stmt, err := db.Prepare("UPDATE propiedades SET eliminado = ? WHERE id_pro = ?")
-	ErrorCheck(err)
-	_, e := stmt.Exec(del, id)
-	ErrorCheck(e)
-	if e == nil {
-		resp.Tipo = "success"
-		resp.Reload = 1
-		resp.Page = "crearPropiedad"
-		resp.Titulo = "Propiedad eliminada"
-		resp.Texto = "Propiedad eliminada correctamente"
-	} else {
+	if found, id_emp := Permisos(token, 1); found {
+		del := 1
+		stmt, err := db.Prepare("UPDATE propiedades SET eliminado = ? WHERE id_pro = ? AND id_emp = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(del, id, id_emp)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Tipo = "success"
+			resp.Reload = 1
+			resp.Page = "crearPropiedad"
+			resp.Titulo = "Propiedad eliminada"
+			resp.Texto = "Propiedad eliminada correctamente"
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar propiedad"
+			resp.Texto = "La propiedad no pudo ser eliminada"
+		}
+	}else{
 		resp.Tipo = "error"
 		resp.Titulo = "Error al eliminar propiedad"
-		resp.Texto = "La propiedad no pudo ser eliminada"
+		resp.Texto = "No tiene los permisos"
 	}
 	return resp
 }
 
-func InsertUsuario(db *sql.DB, token string, nombre string) Response {
+func InsertUsuario(db *sql.DB, token string, nombre string, p0 string, p1 string, p2 string, p3 string, p4 string, p5 string, p6 string, p7 string, p8 string, p9 string) Response {
 
 	resp := Response{}
-	stmt, err := db.Prepare("INSERT INTO usuarios (nombre, id_emp) VALUES (?,?)")
+	stmt, err := db.Prepare("INSERT INTO usuarios (user, id_emp, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
 	ErrorCheck(err)
-	stmt.Exec(nombre, GetIdEmp(token))
+	defer stmt.Close()
+	stmt.Exec(nombre, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 	if err == nil {
 		resp.Op = 1
 		resp.Reload = 1
@@ -863,12 +1275,12 @@ func InsertUsuario(db *sql.DB, token string, nombre string) Response {
 	}
 	return resp
 }
-func UpdateUsuario(db *sql.DB, nombre string, id int) Response {
+func UpdateUsuario(db *sql.DB, token string, id int, nombre string, p0 string, p1 string, p2 string, p3 string, p4 string, p5 string, p6 string, p7 string, p8 string, p9 string) Response {
 
 	resp := Response{}
-	stmt, err := db.Prepare("UPDATE usuarios SET nombre = ? WHERE id_usr = ?")
+	stmt, err := db.Prepare("UPDATE usuarios SET user = ?, p0 = ?, p1 = ?, p2 = ?, p3 = ?, p4 = ?, p5 = ?, p6 = ?, p7 = ?, p8 = ?, p9 = ? WHERE id_usr = ?")
 	ErrorCheck(err)
-	_, e := stmt.Exec(nombre, id)
+	_, e := stmt.Exec(nombre, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, id)
 	ErrorCheck(e)
 	if e == nil {
 		resp.Op = 1
@@ -881,83 +1293,229 @@ func UpdateUsuario(db *sql.DB, nombre string, id int) Response {
 	}
 	return resp
 }
-func BorrarUsuario(db *sql.DB, id int) Response {
+func BorrarUsuario(db *sql.DB, token string, id int) Response {
 
-	del := 1
 	resp := Response{}
-	stmt, err := db.Prepare("UPDATE usuarios SET eliminado = ? WHERE id_usr = ?")
-	ErrorCheck(err)
-	_, e := stmt.Exec(del, id)
-	ErrorCheck(e)
-	if e == nil {
-		resp.Tipo = "success"
-		resp.Reload = 1
-		resp.Page = "crearUsuarios"
-		resp.Titulo = "Usuario eliminada"
-		resp.Texto = "Usuario eliminada correctamente"
-	} else {
+	if SuperAdmin(token){
+		del := 1
+		stmt, err := db.Prepare("UPDATE usuarios SET eliminado = ? WHERE id_usr = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(del, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Tipo = "success"
+			resp.Reload = 1
+			resp.Page = "crearUsuarios"
+			resp.Titulo = "Usuario eliminada"
+			resp.Texto = "Usuario eliminada correctamente"
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar usuario"
+			resp.Texto = "El usuario no pudo ser eliminada"
+		}
+	}else{
 		resp.Tipo = "error"
 		resp.Titulo = "Error al eliminar usuario"
-		resp.Texto = "El usuario no pudo ser eliminada"
+		resp.Texto = "No tiene los permisos"
 	}
 	return resp
 }
 
-func InsertEmpresa(db *sql.DB, nombre string) Response {
+func InsertEmpresa(db *sql.DB, token string, nombre string, precio string) Response {
 
 	resp := Response{}
-	stmt, err := db.Prepare("INSERT INTO empresa (nombre) VALUES (?)")
-	ErrorCheck(err)
-	stmt.Exec(nombre)
-	if err == nil {
-		resp.Op = 1
-		resp.Reload = 1
-		resp.Page = "crearEmpresa"
-		resp.Msg = "Empresa ingresada correctamente"
-	} else {
-		resp.Op = 2
-		resp.Msg = "La empresa no pudo ser ingresada"
+	resp.Op = 2
+	if SuperAdmin(token){
+		stmt, err := db.Prepare("INSERT INTO empresa (nombre, precio) VALUES (?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		stmt.Exec(nombre, precio)
+		if err == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "crearEmpresa"
+			resp.Msg = "Empresa ingresada correctamente"
+		} else {
+			resp.Msg = "La empresa no pudo ser ingresada"
+		}
+	}else{
+		resp.Msg = "No tiene permisos"
 	}
 	return resp
 }
-func UpdateEmpresa(db *sql.DB, nombre string, id int) Response {
+func UpdateEmpresa(db *sql.DB, token string, id int, nombre string, precio string) Response {
 
 	resp := Response{}
-	stmt, err := db.Prepare("UPDATE empresa SET nombre = ? WHERE id_emp = ?")
-	ErrorCheck(err)
-	_, e := stmt.Exec(nombre, id)
-	ErrorCheck(e)
-	if e == nil {
-		resp.Op = 1
-		resp.Reload = 1
-		resp.Page = "crearEmpresa"
-		resp.Msg = "Empresa actualizada correctamente"
-	} else {
-		resp.Op = 2
-		resp.Msg = "La empresa no pudo ser actualizada"
+	resp.Op = 2
+	if SuperAdmin(token){
+		stmt, err := db.Prepare("UPDATE empresa SET nombre = ?, precio = ? WHERE id_emp = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(nombre, precio, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "crearEmpresa"
+			resp.Msg = "Empresa actualizada correctamente"
+		} else {
+			resp.Msg = "La empresa no pudo ser actualizada"
+		}
+	}else{
+		resp.Msg = "No tiene permisos"
 	}
 	return resp
 }
-func BorrarEmpresa(db *sql.DB, id int) Response {
+func BorrarEmpresa(db *sql.DB, token string, id int) Response {
 
-	del := 1
 	resp := Response{}
-	stmt, err := db.Prepare("UPDATE empresa SET eliminado = ? WHERE id_emp = ?")
-	ErrorCheck(err)
-	_, e := stmt.Exec(del, id)
-	ErrorCheck(e)
-	if e == nil {
-		resp.Tipo = "success"
-		resp.Reload = 1
-		resp.Page = "crearEmpresa"
-		resp.Titulo = "Empresa eliminada"
-		resp.Texto = "Empresa eliminada correctamente"
-	} else {
+	if SuperAdmin(token){
+		del := 1
+		stmt, err := db.Prepare("UPDATE empresa SET eliminado = ? WHERE id_emp = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(del, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Tipo = "success"
+			resp.Reload = 1
+			resp.Page = "crearEmpresa"
+			resp.Titulo = "Empresa eliminada"
+			resp.Texto = "Empresa eliminada correctamente"
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar empresa"
+			resp.Texto = "La empresa no pudo ser eliminada"
+		}
+	}else{
 		resp.Tipo = "error"
 		resp.Titulo = "Error al eliminar empresa"
-		resp.Texto = "La empresa no pudo ser eliminada"
+		resp.Texto = "No tiene los permisos"
 	}
 	return resp
+}
+
+func GetPais(db *sql.DB, nombre string) (int64, bool) {
+
+	res, err := db.Query("SELECT id_pai FROM paises WHERE nombre = ?", nombre)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+		var id int64
+		err := res.Scan(&id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return id, true
+	} else {
+		stmt, err := db.Prepare("INSERT INTO paises (nombre) VALUES (?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		r, err := stmt.Exec(nombre)
+		if err == nil {
+			idx, err := r.LastInsertId()
+			if err == nil {
+				return idx, true
+			}else{
+				return 0, false
+			}
+		} else {
+			return 0, false
+		}
+	}
+}
+func GetRegion(db *sql.DB, nombre string, id_pai int64) (int64, bool) {
+
+	res, err := db.Query("SELECT id_reg FROM regiones WHERE nombre = ? AND id_pai = ?", nombre, id_pai)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+		var id int64
+		err := res.Scan(&id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return id, true
+	} else {
+		stmt, err := db.Prepare("INSERT INTO regiones (nombre, id_pai) VALUES (?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		r, err := stmt.Exec(nombre, id_pai)
+		if err == nil {
+			idx, err := r.LastInsertId()
+			if err == nil {
+				return idx, true
+			}else{
+				return 0, false
+			}
+		} else {
+			return 0, false
+		}
+	}
+}
+func GetCiudad(db *sql.DB, nombre string, id_pai int64, id_reg int64) (int64, bool) {
+
+	res, err := db.Query("SELECT id_ciu FROM ciudades WHERE nombre = ? AND id_pai = ? AND id_reg = ?", nombre, id_pai, id_reg)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+		var id int64
+		err := res.Scan(&id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return id, true
+	} else {
+		stmt, err := db.Prepare("INSERT INTO ciudades (nombre, id_pai, id_reg) VALUES (?,?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		r, err := stmt.Exec(nombre, id_pai, id_reg)
+		if err == nil {
+			idx, err := r.LastInsertId()
+			if err == nil {
+				return idx, true
+			}else{
+				return 0, false
+			}
+		} else {
+			return 0, false
+		}
+	}
+}
+func GetComuna(db *sql.DB, nombre string, id_pai int64, id_reg int64, id_ciu int64) (int64, bool) {
+
+	res, err := db.Query("SELECT id_com FROM comunas WHERE nombre = ? AND id_pai = ? AND id_reg = ? AND id_ciu = ?", nombre, id_pai, id_reg, id_ciu)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+		var id int64
+		err := res.Scan(&id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return id, true
+	} else {
+		stmt, err := db.Prepare("INSERT INTO comunas (nombre, id_pai, id_reg, id_ciu) VALUES (?,?,?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		r, err := stmt.Exec(nombre, id_pai, id_reg, id_ciu)
+		if err == nil {
+			idx, err := r.LastInsertId()
+			if err == nil {
+				return idx, true
+			}else{
+				return 0, false
+			}
+		} else {
+			return 0, false
+		}
+	}
 }
 
 // FUNCTION DB //
@@ -983,7 +1541,6 @@ func run(con context.Context, c *MyHandler, stdout io.Writer) error {
 		}
 	}
 }
-
 // DAEMON //
 func TemplatePage(v string) (*template.Template, error) {
 
@@ -1042,4 +1599,153 @@ func ErrorCheck(e error) {
 }
 func GetTemplateConf(titulo string, subtitulo string, subtitulo2 string, titulolista string, formaccion string, pagemod string, delaccion string, delobj string) TemplateConf {
 	return TemplateConf{Titulo: titulo, SubTitulo: subtitulo, SubTitulo2: subtitulo2, TituloLista: titulolista, FormAccion: formaccion, PageMod: pagemod, DelAccion: delaccion, DelObj: delobj}
+}
+func GetMonth(m int) time.Month {
+
+	var t time.Month
+
+	switch m {
+		case 0:
+			t = time.January
+		case 1:
+			t = time.February
+		case 2:
+			t = time.March
+		case 3:
+			t = time.April
+		case 4:
+			t = time.May
+		case 5:
+			t = time.June
+		case 6:
+			t = time.July
+		case 7:
+			t = time.August
+		case 8:
+			t = time.September
+		case 9:
+			t = time.October
+		case 10:
+			t = time.November
+		case 11:
+			t = time.December
+	}
+	return t
+}
+
+type EmailData struct {
+	FirstName string
+	LastName  string
+}
+func getHTMLTemplate() string {
+	var templateBuffer bytes.Buffer
+	data := EmailData{
+	   FirstName: "John",
+	   LastName:  "Doe",
+	}
+	htmlData, err := ioutil.ReadFile("email/recuperar.html")
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+	if err != nil {
+	   log.Fatal(err)
+	   return ""
+	}
+	return templateBuffer.String()
+}
+func GenerateSESTemplate() (template *ses.SendEmailInput) {
+
+	sender := "no-reply@redigo.cl"
+	receiver := "diego.gomez.bezmalinovic@gmail.com"
+	html := getHTMLTemplate()
+	title := "Sample Email"
+	template = &ses.SendEmailInput{
+		Destination: &ses.Destination{
+			CcAddresses: []*string{},
+			ToAddresses: []*string{
+				aws.String(receiver),
+			},
+		},
+		Message: &ses.Message{
+			Body: &ses.Body{
+				Html: &ses.Content{
+					Charset: aws.String("utf-8"),
+					Data:    aws.String(html),
+				},
+			},
+			Subject: &ses.Content{
+				Charset: aws.String("utf-8"),
+				Data:    aws.String(title),
+			},
+		},
+		Source: aws.String(sender),
+	}
+	return
+}
+func SendEmail() {
+
+	accessKeyId := "AKIAUXYENV2YIS27X7GV"
+	secretAccessKey := "BJ73JC/BJZLghgpG0xKegtZ+OUf4KURA1DCNgFjsqPg3qnfzpLP"
+
+	region := "us-east-1"
+
+	emailTemplate := GenerateSESTemplate()
+	sess, err := session.NewSession(&aws.Config{
+	   Region:      aws.String(region),
+	   Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
+	})
+	if err != nil {
+	   log.Fatal(err)
+	}
+	service := ses.New(sess)
+	_, err = service.SendEmail(emailTemplate)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			log.Fatal(aerr.Error())
+		} else {
+			log.Fatal(err)
+		}
+	}
+}
+
+func SendEmail2(){
+
+	region := "us-east-1"
+	svc := ses.New(session.New(&aws.Config{ Region: aws.String(region) }))
+	input := &ses.SendRawEmailInput{
+		FromArn: aws.String(""),
+		RawMessage: &ses.RawMessage{
+			Data: []byte("From: no-reply@redigo.cl\\nTo: diego.gomez.bezmalinovic@gmail.com\\nSubject: Test email (contains an attachment)\\nMIME-Version: 1.0\\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\\n\\n--NextPart\\nContent-Type: text/plain\\n\\nThis is the message body.\\n\\n--NextPart\\nContent-Type: text/plain;\\nContent-Disposition: attachment; filename=\"attachment.txt\"\\n\\nThis is the text in the attachment.\\n\\n--NextPart--"),
+		},
+		ReturnPathArn: aws.String(""),
+		Source:        aws.String(""),
+		SourceArn:     aws.String(""),
+	}
+
+	result, err := svc.SendRawEmail(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ses.ErrCodeMessageRejected:
+				fmt.Println(ses.ErrCodeMessageRejected, aerr.Error())
+			case ses.ErrCodeMailFromDomainNotVerifiedException:
+				fmt.Println(ses.ErrCodeMailFromDomainNotVerifiedException, aerr.Error())
+			case ses.ErrCodeConfigurationSetDoesNotExistException:
+				fmt.Println(ses.ErrCodeConfigurationSetDoesNotExistException, aerr.Error())
+			case ses.ErrCodeConfigurationSetSendingPausedException:
+				fmt.Println(ses.ErrCodeConfigurationSetSendingPausedException, aerr.Error())
+			case ses.ErrCodeAccountSendingPausedException:
+				fmt.Println(ses.ErrCodeAccountSendingPausedException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
+	fmt.Println(result)
+
 }

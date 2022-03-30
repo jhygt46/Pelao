@@ -1,0 +1,63 @@
+
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <li class="back" onclick="backurl()"></li>
+        <li class="back" onclick="backurl()"></li>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign">
+                <li class="back" onclick="backurl()"></li>
+                <li class="back" onclick="backurl()"></li>
+            </ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Superficie terreno:</span>
+                    <input id="sup_terreno" type="text" value="{{.SupTerreno}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Superficie edificada:</span>
+                    <input id="sup_edificada" type="text" value="{{.SupEdificada}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Cantidad de pisos:</span>
+                    <input id="cant_pisos" type="text" value="{{.CantPisos}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Permiso Edificación:</span>
+                    <select id="permiso_edificacion">
+                        <option value="0" {{if eq .PermEdificacion 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .PermEdificacion 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .PermEdificacion 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Recepción Final:</span>
+                    <select id="recepcion_final">
+                        <option value="0" {{if eq .RecepcionFinal 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .RecepcionFinal 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .RecepcionFinal 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </label>
+            </fieldset>
+        </form>
+    </div>
+</div>
