@@ -1333,11 +1333,10 @@ func InsertUsuario(db *sql.DB, token string, nombre string, p0 string, p1 string
 	stmt, err := db.Prepare("INSERT INTO usuarios (user, code, id_emp, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	ErrorCheck(err)
 	defer stmt.Close()
-	stmt.Exec(nombre, code, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
-	if err == nil {
-
+	_, e := stmt.Exec(nombre, code, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+	ErrorCheck(e)
+	if e == nil {
 		SendEmail(code)
-
 		resp.Op = 1
 		resp.Reload = 1
 		resp.Page = "crearUsuarios"
