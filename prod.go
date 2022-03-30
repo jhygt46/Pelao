@@ -653,6 +653,8 @@ func Recuperar(ctx *fasthttp.RequestCtx){
 }
 func Index(ctx *fasthttp.RequestCtx) {
 
+	fmt.Println(GetUF())
+
 	//SendEmail()
 	//SendEmail2()
 	ctx.SetContentType("text/html; charset=utf-8")
