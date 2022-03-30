@@ -405,7 +405,7 @@ func Login(ctx *fasthttp.RequestCtx) {
 
 	json.NewEncoder(ctx).Encode(resp)
 }
-func Login(ctx *fasthttp.RequestCtx) {
+func Nueva(ctx *fasthttp.RequestCtx) {
 
 	ctx.Response.Header.Set("Content-Type", "application/json")
 	resp := Response{Op: 2}
