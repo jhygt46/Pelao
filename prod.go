@@ -428,15 +428,15 @@ func Nueva(ctx *fasthttp.RequestCtx) {
 
 		if res.Next() {
 
-			pass := GetMD5Hash(ctx.PostArgs().Peek("pass"))
+			pass := GetMD5Hash(ctx.PostArgs().Peek("pass_01"))
 
 			var id_usr int
 			err := res.Scan(&id_usr)
 			ErrorCheck(err)
-
+			st := ""
 			stmt, err := db.Prepare("UPDATE usuarios SET pass = ?, code = ? WHERE id_usr = ?")
 			ErrorCheck(err)
-			_, e := stmt.Exec(pass, code, id_usr)
+			_, e := stmt.Exec(pass, st, id_usr)
 			ErrorCheck(e)
 			if e == nil {
 				resp.Op = 1
