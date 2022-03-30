@@ -180,6 +180,9 @@ type Comuna struct {
 	Id_reg int `json:"Id_reg"`
 	Id_pai int `json:"Id_pai"`
 }
+type Recuperar struct {
+	Code string `json:"Code"`
+}
 
 var (
 	imgHandler fasthttp.RequestHandler
@@ -234,7 +237,7 @@ func main() {
 	}()
 	go func() {
 		r := router.New()
-		r.GET("/", Index)
+		r.GET("/{code}", Index)
 		r.GET("/css/{name}", Css)
 		r.GET("/js/{name}", Js)
 		r.GET("/img/{name}", Img)
@@ -598,7 +601,16 @@ func Index(ctx *fasthttp.RequestCtx) {
 		ErrorCheck(err)
 
 	} else {
-		fmt.Fprintf(ctx, showFile("html/login.html"))
+		code := ctx.UserValue("code")
+		if code == "" {
+			fmt.Fprintf(ctx, showFile("html/login.html"))
+		}else{
+			t, err := TemplatePage("html/recuperar.html")
+			ErrorCheck(err)
+			x := Recuperar{ Code: code }
+			err = t.Execute(ctx, x)
+			ErrorCheck(err)
+		}
 	}
 }
 func Salir(ctx *fasthttp.RequestCtx) {
