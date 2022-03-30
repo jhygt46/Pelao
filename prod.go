@@ -1330,12 +1330,12 @@ func InsertUsuario(db *sql.DB, token string, nombre string, p0 string, p1 string
 
 	code := randSeq(32)
 	resp := Response{}
-	stmt, err := db.Prepare("INSERT INTO usuarios (user, admin, pass, code, id_emp, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := db.Prepare("INSERT INTO usuarios (user, admin, pass, code, id_emp, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, eliminado) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	ErrorCheck(err)
 	defer stmt.Close()
 	pass := ""
 	admin := 0
-	_, e := stmt.Exec(nombre, admin, pass, code, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+	_, e := stmt.Exec(nombre, admin, pass, code, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, admin)
 	ErrorCheck(e)
 	if e == nil {
 		SendEmail(code)
