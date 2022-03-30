@@ -18,7 +18,7 @@ function btn_login(){
                 bien(data.Msg);
                 setTimeout(function () {
                     $(location).attr('href','');
-                }, 2000);
+                }, 10);
             }
             if(data.Op == 2){
                 mal(data.Msg);
@@ -45,8 +45,8 @@ function btn_recuperar(){
             if(data.op == 1){
                 bien(data.message);
                 setTimeout(function () {
-                    $(location).attr("href","/admin");
-                }, 5000);
+                    $(location).attr("href","/");
+                }, 10);
             }
             if(data.op == 2){
                 mal(data.message);
@@ -64,15 +64,14 @@ function btn_nueva(){
     var btn = $('#nueva');
     btn.prop("disabled", true );
     $.ajax({
-        url: path+"admin/login/",
+        url: "/nueva",
         type: "POST",
-        data: "accion=nueva_password&pass_01="+$('#pass_01').val()+"&pass_02="+$('#pass_02').val()+"&id="+$('#id_user').val()+"&code="+$('#code').val(),
+        data: "accion=nueva_password&pass_01="+$('#pass1').val()+"&pass_02="+$('#pass2').val()+"&code="+$('#code').val(),
         success: function(data){
             if(data.op == 1){
                 bien(data.message);
-                localStorage.setItem("n_correo", data.correo);
                 setTimeout(function () {
-                    $(location).attr("href","/admin");
+                    $(location).attr("href","/login");
                 }, 2000);
             }
             if(data.op == 2){

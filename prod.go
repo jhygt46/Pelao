@@ -180,7 +180,7 @@ type Comuna struct {
 	Id_reg int `json:"Id_reg"`
 	Id_pai int `json:"Id_pai"`
 }
-type Recuperar struct {
+type Rec struct {
 	Code string `json:"Code"`
 }
 
@@ -193,7 +193,7 @@ var (
 
 func main() {
 
-	SendEmail()
+	//SendEmail()
 	//fmt.Println(GetUF())
 	//SendEmail2()
 
@@ -237,12 +237,14 @@ func main() {
 	}()
 	go func() {
 		r := router.New()
-		r.GET("/{code}", Index)
+		r.GET("/", Index)
 		r.GET("/css/{name}", Css)
+		r.GET("/recuperar/{name}", Recuperar)
 		r.GET("/js/{name}", Js)
 		r.GET("/img/{name}", Img)
 		r.GET("/pages/{name}", Pages)
 		r.POST("/login", Login)
+		r.POST("/nueva", Nueva)
 		r.POST("/save", Save)
 		r.POST("/delete", Delete)
 		r.GET("/salir", Salir)
@@ -399,6 +401,53 @@ func Login(ctx *fasthttp.RequestCtx) {
 
 	} else {
 		resp.Msg = "Usuario Contraseña no existen"
+	}
+
+	json.NewEncoder(ctx).Encode(resp)
+}
+func Login(ctx *fasthttp.RequestCtx) {
+
+	ctx.Response.Header.Set("Content-Type", "application/json")
+	resp := Response{Op: 2}
+
+	pass1 := string(ctx.PostArgs().Peek("pass_01"))
+	pass2 := string(ctx.PostArgs().Peek("pass_02"))
+	
+
+	if pass1 == pass2 {
+
+		db, err := GetMySQLDB()
+		defer db.Close()
+		ErrorCheck(err)
+
+		code := string(ctx.PostArgs().Peek("code"))
+		cn := 0
+		res, err := db.Query("SELECT id_usr FROM usuarios WHERE code = ? AND eliminado=0", code, cn)
+		defer res.Close()
+		ErrorCheck(err)
+
+		if res.Next() {
+
+			pass := GetMD5Hash(ctx.PostArgs().Peek("pass"))
+
+			var id_usr int
+			err := res.Scan(&id_usr)
+			ErrorCheck(err)
+
+			stmt, err := db.Prepare("UPDATE usuarios SET pass = ?, code = ? WHERE id_usr = ?")
+			ErrorCheck(err)
+			_, e := stmt.Exec(pass, code, id_usr)
+			ErrorCheck(e)
+			if e == nil {
+				resp.Op = 1
+				resp.Msg = ""
+			}
+
+		} else {
+			resp.Msg = "Se produjo un error"
+		}
+	}else{
+		resp.Msg = "Se produjo un error"
 	}
 
 	json.NewEncoder(ctx).Encode(resp)
@@ -585,9 +634,26 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		ctx.NotFound()
 	}
 }
+func Recuperar(ctx *fasthttp.RequestCtx){
+
+	ctx.SetContentType("text/html; charset=utf-8")
+	name := ctx.UserValue("name")
+
+	str, ok := name.(string)
+	if ok {
+		fmt.Printf("%T %v", str, str)
+
+		t, err := TemplatePage("html/recuperar.html")
+		ErrorCheck(err)
+		var x Rec
+		x.Code = str
+		err = t.Execute(ctx, x)
+		ErrorCheck(err)
+	}
+}
 func Index(ctx *fasthttp.RequestCtx) {
 
-	SendEmail()
+	//SendEmail()
 	//SendEmail2()
 	ctx.SetContentType("text/html; charset=utf-8")
 	token := string(ctx.Request.Header.Cookie("cu"))
@@ -601,16 +667,7 @@ func Index(ctx *fasthttp.RequestCtx) {
 		ErrorCheck(err)
 
 	} else {
-		code := ctx.UserValue("code")
-		if code == "" {
-			fmt.Fprintf(ctx, showFile("html/login.html"))
-		}else{
-			t, err := TemplatePage("html/recuperar.html")
-			ErrorCheck(err)
-			x := Recuperar{ Code: code }
-			err = t.Execute(ctx, x)
-			ErrorCheck(err)
-		}
+		fmt.Fprintf(ctx, showFile("html/login.html"))
 	}
 }
 func Salir(ctx *fasthttp.RequestCtx) {
@@ -1271,12 +1328,16 @@ func BorrarPropiedad(db *sql.DB, token string, id int) Response {
 
 func InsertUsuario(db *sql.DB, token string, nombre string, p0 string, p1 string, p2 string, p3 string, p4 string, p5 string, p6 string, p7 string, p8 string, p9 string) Response {
 
+	code := randSeq(32)
 	resp := Response{}
-	stmt, err := db.Prepare("INSERT INTO usuarios (user, id_emp, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := db.Prepare("INSERT INTO usuarios (user, code, id_emp, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	ErrorCheck(err)
 	defer stmt.Close()
-	stmt.Exec(nombre, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+	stmt.Exec(nombre, code, GetIdEmp(token), p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 	if err == nil {
+
+		SendEmail(code)
+
 		resp.Op = 1
 		resp.Reload = 1
 		resp.Page = "crearUsuarios"
@@ -1646,14 +1707,12 @@ func GetMonth(m int) time.Month {
 }
 
 type EmailData struct {
-	FirstName string
-	LastName  string
+	Code string
 }
-func getHTMLTemplate() string {
+func getHTMLTemplate(code string) string {
 	var templateBuffer bytes.Buffer
 	data := EmailData{
-	   FirstName: "John",
-	   LastName:  "Doe",
+	   Code: code,
 	}
 	htmlData, err := ioutil.ReadFile("email/recuperar.html")
 	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
@@ -1664,11 +1723,11 @@ func getHTMLTemplate() string {
 	}
 	return templateBuffer.String()
 }
-func GenerateSESTemplate() (template *ses.SendEmailInput) {
+func GenerateSESTemplate(code string) (template *ses.SendEmailInput) {
 
 	sender := "diego.gomez.bezmalinovic@gmail.com"
 	receiver := "diego.gomez.bezmalinovic@gmail.com"
-	html := getHTMLTemplate()
+	html := getHTMLTemplate(code)
 	title := "Sample Email"
 	template = &ses.SendEmailInput{
 		Destination: &ses.Destination{
@@ -1693,11 +1752,11 @@ func GenerateSESTemplate() (template *ses.SendEmailInput) {
 	}
 	return
 }
-func SendEmail() {
+func SendEmail(code string) {
 
 	region := "us-east-1"
 
-	emailTemplate := GenerateSESTemplate()
+	emailTemplate := GenerateSESTemplate(code)
 	sess, err := session.NewSession(&aws.Config{
 	   Region:      aws.String(region),
 	})
