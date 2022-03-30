@@ -422,7 +422,7 @@ func Nueva(ctx *fasthttp.RequestCtx) {
 
 		code := string(ctx.PostArgs().Peek("code"))
 		cn := 0
-		res, err := db.Query("SELECT id_usr FROM usuarios WHERE code = ? AND eliminado=0", code, cn)
+		res, err := db.Query("SELECT id_usr FROM usuarios WHERE code = ? AND eliminado = ?", code, cn)
 		defer res.Close()
 		ErrorCheck(err)
 
@@ -923,7 +923,7 @@ func GetUsuarios(token string) ([]Lista, bool) {
 		log.Fatal(err)
 	}
 
-	if res.Next() {
+	for res.Next() {
 
 		var id_usr int
 		var user string
