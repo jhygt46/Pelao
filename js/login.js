@@ -68,13 +68,13 @@ function btn_nueva(){
         type: "POST",
         data: "pass_01="+$('#pass1').val()+"&pass_02="+$('#pass2').val()+"&code="+$('#code').val(),
         success: function(data){
-            if(data.op == 1){
+            if(data.Op == 1){
                 bien(data.message);
                 setTimeout(function () {
                     $(location).attr("href","/");
                 }, 2000);
             }
-            if(data.op == 2){
+            if(data.Op == 2){
                 mal(data.message);
                 btn.prop("disabled", false);
             }     
