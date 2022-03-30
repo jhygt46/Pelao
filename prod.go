@@ -193,6 +193,7 @@ func main() {
 
 	//SendEmail()
 	//fmt.Println(GetUF())
+	SendEmail2()
 
 	if runtime.GOOS == "windows" {
 		imgHandler = fasthttp.FSHandler("C:/Go/Pelao/img", 1)
@@ -1714,7 +1715,7 @@ func SendEmail2(){
 	input := &ses.SendRawEmailInput{
 		FromArn: aws.String(""),
 		RawMessage: &ses.RawMessage{
-			Data: []byte("From: no-reply@redigo.cl\\nTo: diego.gomez.bezmalinovic@gmail.com\\nSubject: Test email (contains an attachment)\\nMIME-Version: 1.0\\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\\n\\n--NextPart\\nContent-Type: text/plain\\n\\nThis is the message body.\\n\\n--NextPart\\nContent-Type: text/plain;\\nContent-Disposition: attachment; filename=\"attachment.txt\"\\n\\nThis is the text in the attachment.\\n\\n--NextPart--"),
+			Data: []byte("From: diego.gomez.bezmalinovic@gmail.com\\nTo: diego.gomez.bezmalinovic@gmail.com\\nSubject: Test email (contains an attachment)\\nMIME-Version: 1.0\\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\\n\\n--NextPart\\nContent-Type: text/plain\\n\\nThis is the message body.\\n\\n--NextPart\\nContent-Type: text/plain;\\nContent-Disposition: attachment; filename=\"attachment.txt\"\\n\\nThis is the text in the attachment.\\n\\n--NextPart--"),
 		},
 		ReturnPathArn: aws.String(""),
 		Source:        aws.String(""),
