@@ -1726,7 +1726,7 @@ func getHTMLTemplate(code string) string {
 }
 func GenerateSESTemplate(code string) (template *ses.SendEmailInput) {
 
-	sender := "no-reply@redigo.cl"
+	sender := "diego.gomez.bezmalinovic@gmail.com"
 	receiver := "diego.gomez.bezmalinovic@gmail.com"
 	html := getHTMLTemplate(code)
 	title := "Nuevo Usuarios"
