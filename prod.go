@@ -191,9 +191,9 @@ var (
 
 func main() {
 
-	//SendEmail()
+	SendEmail()
 	//fmt.Println(GetUF())
-	SendEmail2()
+	//SendEmail2()
 
 	if runtime.GOOS == "windows" {
 		imgHandler = fasthttp.FSHandler("C:/Go/Pelao/img", 1)
@@ -585,8 +585,8 @@ func Pages(ctx *fasthttp.RequestCtx) {
 }
 func Index(ctx *fasthttp.RequestCtx) {
 
-	//SendEmail()
-	SendEmail2()
+	SendEmail()
+	//SendEmail2()
 	ctx.SetContentType("text/html; charset=utf-8")
 	token := string(ctx.Request.Header.Cookie("cu"))
 	gpu := GetPermisoUser(token)
@@ -1684,15 +1684,11 @@ func GenerateSESTemplate() (template *ses.SendEmailInput) {
 }
 func SendEmail() {
 
-	accessKeyId := "AKIAUXYENV2YIS27X7GV"
-	secretAccessKey := "BJ73JC/BJZLghgpG0xKegtZ+OUf4KURA1DCNgFjsqPg3qnfzpLP"
-
 	region := "us-east-1"
 
 	emailTemplate := GenerateSESTemplate()
 	sess, err := session.NewSession(&aws.Config{
 	   Region:      aws.String(region),
-	   Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 	})
 	if err != nil {
 	   log.Fatal(err)
