@@ -66,12 +66,12 @@ function btn_nueva(){
     $.ajax({
         url: "/nueva",
         type: "POST",
-        data: "accion=nueva_password&pass_01="+$('#pass1').val()+"&pass_02="+$('#pass2').val()+"&code="+$('#code').val(),
+        data: "pass_01="+$('#pass1').val()+"&pass_02="+$('#pass2').val()+"&code="+$('#code').val(),
         success: function(data){
             if(data.op == 1){
                 bien(data.message);
                 setTimeout(function () {
-                    $(location).attr("href","/login");
+                    $(location).attr("href","/");
                 }, 2000);
             }
             if(data.op == 2){
