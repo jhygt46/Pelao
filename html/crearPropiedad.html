@@ -113,13 +113,16 @@
         });
     
     }
+    document.getElementById('dominio').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('dominio')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('dominio')[0].style.display = "none"
+        }
+    })
 </script>
 <div class="mt">
     <h1>{{.Titulo}}</h1>
-    <ul class="clearfix valign">
-        <li class="back" onclick="backurl()"></li>
-        <li class="back" onclick="backurl()"></li>
-    </ul>
 </div>
 <hr>
 <div class="i">
@@ -138,20 +141,20 @@
                 <input id="accion" type="hidden" value="{{.FormAccion}}" />
                 <label>
                     <span>Nombre:</span>
-                    <input id="nombre" type="text" value="{{.FormNombre}}" require="" placeholder="" />
+                    <input id="nombre" type="text" value="{{.Nombre}}" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
                 <label>
                     <span>Direccion:</span>
-                    <input id="dir_auto" type="text" value="" require="" placeholder="" />
-                    <input id="lat" type="hidden" value="" require="" placeholder="" />
-                    <input id="lng" type="hidden" value="" require="" placeholder="" />
-                    <input id="ciudad" type="hidden" value="" require="" placeholder="" />
-                    <input id="region" type="hidden" value="" require="" placeholder="" />
-                    <input id="comuna" type="hidden" value="" require="" placeholder="" />
-                    <input id="pais" type="hidden" value="" require="" placeholder="" />
-                    <input id="direccion" type="hidden" value="" require="" placeholder="" />
-                    <input id="numero" type="hidden" value="" require="" placeholder="" />
+                    <input id="dir_auto" type="text" value="{{.Direccion}}" require="" placeholder="" />
+                    <input id="lat" type="hidden" value="{{.Lat}}" require="" placeholder="" />
+                    <input id="lng" type="hidden" value="{{.Lng}}" require="" placeholder="" />
+                    <input id="ciudad" type="hidden" value="{{.Ciudad}}" require="" placeholder="" />
+                    <input id="region" type="hidden" value="{{.Region}}" require="" placeholder="" />
+                    <input id="comuna" type="hidden" value="{{.Comuna}}" require="" placeholder="" />
+                    <input id="pais" type="hidden" value="{{.Pais}}" require="" placeholder="" />
+                    <input id="direccion" type="hidden" value="{{.Direccion}}" require="" placeholder="" />
+                    <input id="numero" type="hidden" value="{{.Numero}}" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
                 <div id="map" style="width:100%; height:250px;"></div>
@@ -161,7 +164,15 @@
                         <option value="0" {{if eq .Dominio 0}}selected{{end}}>Seleccionar</option>
                         <option value="1" {{if eq .Dominio 1}}selected{{end}}>Propio</option>
                         <option value="2" {{if eq .Dominio 2}}selected{{end}}>Arrendado</option>
-                        <option value="3" {{if eq .Dominio 3}}selected{{end}}>Administrado</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="dominio" {{if eq .Dominio 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Dominio:</span>
+                    <select id="dominio2">
+                        <option value="0" {{if eq .Dominio2 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Dominio2 1}}selected{{end}}>Uso Propio</option>
+                        <option value="2" {{if eq .Dominio2 2}}selected{{end}}>Arrendado a Terceros</option>
                     </select>
                     <div class="mensaje"></div>
                 </label>
@@ -245,7 +256,14 @@
                 <div class="btns clearfix valign">
                     <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', {{.Id}}, '{{$.DelObj}}', '{{.Nombre}}')"></a>
                     <a title="Modificar" class="icn mod" onclick="navlink('{{$.PageMod}}?id={{.Id}}')"></a>
-                    <a title="Modificar" class="icn ent" onclick="navlink('/pages/inicioEmpresa?id={{.Id}}')"></a>
+                    <a title="Modulo8" class="icn mdl" onclick="navlink('/pages/crearPropiedad8?id={{.Id}}')"></a>
+                    <a title="Modulo7" class="icn mdl" onclick="navlink('/pages/crearPropiedad7?id={{.Id}}')"></a>
+                    <a title="Modulo6" class="icn mdl" onclick="navlink('/pages/crearPropiedad6?id={{.Id}}')"></a>
+                    <a title="Modulo5" class="icn mdl" onclick="navlink('/pages/crearPropiedad5?id={{.Id}}')"></a>
+                    <a title="Modulo4" class="icn mdl" onclick="navlink('/pages/crearPropiedad4?id={{.Id}}')"></a>
+                    <a title="Modulo3" class="icn mdl" onclick="navlink('/pages/crearPropiedad3?id={{.Id}}')"></a>
+                    <a title="Modulo2PermisoEdificacion" class="icn mdl" onclick="navlink('/pages/crearPropiedad2PermisoEdificacion?id={{.Id}}')"></a>
+                    <a title="Modulo2" class="icn mdl" onclick="navlink('/pages/crearPropiedad2?id={{.Id}}')"></a>
                 </div>
             </li>
             {{end}}
@@ -253,10 +271,3 @@
     </div>
 </div>
 {{end}}
-<br />
-<br />
-<div id="infowindow-content">
-    <img src="" width="16" height="16" id="place-icon" />
-    <span id="place-name" class="title"></span><br />
-    <span id="place-address"></span>
-</div>

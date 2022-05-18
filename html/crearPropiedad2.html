@@ -1,9 +1,8 @@
-
 <div class="mt">
     <h1>{{.Titulo}}</h1>
     <ul class="clearfix valign">
-        <li class="back" onclick="backurl()"></li>
-        <li class="back" onclick="backurl()"></li>
+        <a class="back icn r1" title="Crear Propiedad" onclick='navlink("/pages/crearPropiedad")'></a>
+        <a class="back icn r2" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad2PermisoEdificacion?id={{.FormId}}")'></a>
     </ul>
 </div>
 <hr>
@@ -22,36 +21,28 @@
                 <input id="id" type="hidden" value="{{.FormId}}" />
                 <input id="accion" type="hidden" value="{{.FormAccion}}" />
                 <label>
-                    <span>Superficie terreno:</span>
+                    <span>Superficie Terreno:</span>
                     <input id="sup_terreno" type="text" value="{{.SupTerreno}}" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
                 <label>
-                    <span>Superficie edificada:</span>
+                    <span>Superficie Edificada Total:</span>
                     <input id="sup_edificada" type="text" value="{{.SupEdificada}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Superficie Edificada SN:</span>
+                    <input id="sup_edificada_sn" type="text" value="{{.SupEdificadaSN}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Superficie Edificada BN:</span>
+                    <input id="sup_edificada_bn" type="text" value="{{.SupEdificadaBN}}" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
                 <label>
                     <span>Cantidad de pisos:</span>
                     <input id="cant_pisos" type="text" value="{{.CantPisos}}" require="" placeholder="" />
-                    <div class="mensaje"></div>
-                </label>
-                <label>
-                    <span>Permiso Edificación:</span>
-                    <select id="permiso_edificacion">
-                        <option value="0" {{if eq .PermEdificacion 0}}selected{{end}}>Seleccionar</option>
-                        <option value="1" {{if eq .PermEdificacion 1}}selected{{end}}>Si</option>
-                        <option value="2" {{if eq .PermEdificacion 2}}selected{{end}}>No</option>
-                    </select>
-                    <div class="mensaje"></div>
-                </label>
-                <label>
-                    <span>Recepción Final:</span>
-                    <select id="recepcion_final">
-                        <option value="0" {{if eq .RecepcionFinal 0}}selected{{end}}>Seleccionar</option>
-                        <option value="1" {{if eq .RecepcionFinal 1}}selected{{end}}>Si</option>
-                        <option value="2" {{if eq .RecepcionFinal 2}}selected{{end}}>No</option>
-                    </select>
                     <div class="mensaje"></div>
                 </label>
                 <label>

@@ -1,0 +1,113 @@
+<script>
+    document.getElementById('cert_info_previas').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('cert_info_previas')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('cert_info_previas')[0].style.display = "none"
+        }
+    })
+    document.getElementById('tipo_instrumento').addEventListener('change', function() {
+        if (this.value == 4){
+            document.getElementsByClassName('tipo_instrumento')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('tipo_instrumento')[0].style.display = "none"
+        }
+    })
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Minicipal" onclick='navlink("/pages/crearPropiedad7?id={{.FormId}}")'></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign">
+                <li class="back" onclick="backurl()"></li>
+                <li class="back" onclick="backurl()"></li>
+            </ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Certificado Informaciones Previas:</span>
+                    <select id="cert_info_previas">
+                        <option value="0" {{if eq .CertInfoPrevias 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CertInfoPrevias 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .CertInfoPrevias 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="cert_info_previas" {{if eq .CertInfoPrevias 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_cert_info_previas" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Tipo de Instrumento:</span>
+                    <select id="tipo_instrumento">
+                        <option value="0" {{if eq .TipoInstrumento 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .TipoInstrumento 1}}selected{{end}}>Plan Regulador Comunal</option>
+                        <option value="2" {{if eq .TipoInstrumento 2}}selected{{end}}>Plan Regulador Intercomunal</option>
+                        <option value="3" {{if eq .TipoInstrumento 3}}selected{{end}}>Plan Regulador Metropolitano</option>
+                        <option value="4" {{if eq .TipoInstrumento 4}}selected{{end}}>Otro</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="tipo_instrumento" {{if eq .TipoInstrumento 4}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Especificar:</span>
+                    <input id="detalle_tipo_instrumento" type="text" value="{{.DetalleTipoInstrumento}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Destino:</span>
+                    <select id="normativo_destino">
+                        <option value="0" {{if eq .NormativoDestino 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .NormativoDestino 1}}selected{{end}}>Urbano</option>
+                        <option value="2" {{if eq .NormativoDestino 2}}selected{{end}}>Rural</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Zona Normativa:</span>
+                    <input id="zona_normativa" type="text" value="{{.ZonaNormativa}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Usos Permitidos:</span>
+                    <input id="usos_permitidos" type="text" value="{{.UsosPermitidos}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Usos Permitidos:</span>
+                    <input id="usos_prohibidos" type="text" value="{{.UsosProhibidos}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Densidad:</span>
+                    <input id="densidad" type="text" value="{{.Densidad}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Coef Constructibilidad:</span>
+                    <input id="coef_constructibilidad" type="text" value="{{.CoefConstructibilidad}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Coef Ocupacion Suelo:</span>
+                    <input id="coef_ocupacion_suelo" type="text" value="{{.CoefOcupacionSuelo}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </label>
+            </fieldset>
+        </form>
+    </div>
+</div>

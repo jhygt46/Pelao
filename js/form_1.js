@@ -66,6 +66,10 @@ function forms(that){
             data.append($(this).attr('id'), $(this).val());
             //inputs.push($(this));
         }
+        if($(this).attr('type') == "number"){
+            data.append($(this).attr('id'), $(this).val());
+            //inputs.push($(this));
+        }
         if($(this).attr('type') == "date"){
             data.append($(this).attr('id'), $(this).val());
             //inputs.push($(this));

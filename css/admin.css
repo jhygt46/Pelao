@@ -278,11 +278,17 @@ body{
 .h .mt ul{
     right: 0px;
 }
-.h .mt ul li{
+.h .mt ul a{
     width: 30px;
     height: 30px;
-    background: #000;
+    background: url('../img/icons-set.png') no-repeat;
     float: left;
+}
+.h .mt ul .r1{
+    background-position: -596px -334px;
+}
+.h .mt ul .r2{
+    background-position: -535px -334px;
 }
 .h .i{
     display:block;
@@ -350,6 +356,9 @@ body{
 .h .i .fc .lu .u .btns .ent{
     background-position: -712px -384px;
 }
+.h .i .fc .lu .u .btns .mdl{
+    background-position: -173px -383px;
+}
 
 .basic-grey {
     margin-left: 0px;
@@ -401,7 +410,7 @@ body{
 .basic-grey input[type="text"], .basic-grey input[type="email"], .basic-grey input[type="password"], .basic-grey textarea, .basic-grey select {
     border: 1px solid #DADADA;
     color: #888;
-    height: 36px;
+    height: 30px;
     outline: 0 none;
     padding: 3px 3px 3px 5px;
     width: 100%;
@@ -442,7 +451,35 @@ body{
     margin-top: 2px;
     outline: 0 none;
     padding: 3px 3px 3px 5px;
-    width: 160px;
+    width: 100%;
+    height: 30px;
+    font-size: 12px;
+    line-height:15px;
+    box-shadow: inset 0px 1px 4px #ECECEC;
+    -moz-box-shadow: inset 0px 1px 4px #ECECEC;
+    -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
+}
+.basic-grey input[type="month"] {
+    border: 1px solid #DADADA;
+    color: #888;
+    margin-top: 2px;
+    outline: 0 none;
+    padding: 3px 3px 3px 5px;
+    width: 100%;
+    height: 30px;
+    font-size: 12px;
+    line-height:15px;
+    box-shadow: inset 0px 1px 4px #ECECEC;
+    -moz-box-shadow: inset 0px 1px 4px #ECECEC;
+    -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
+}
+.basic-grey input[type="number"] {
+    border: 1px solid #DADADA;
+    color: #888;
+    margin-top: 2px;
+    outline: 0 none;
+    padding: 3px 3px 3px 5px;
+    width: 100%;
     height: 30px;
     font-size: 12px;
     line-height:15px;
