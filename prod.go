@@ -2387,6 +2387,7 @@ func InsertPropiedad(db *sql.DB, token string, nombre string, lat string, lng st
 				ErrorCheck(err)
 				defer stmt.Close()
 				r, err := stmt.Exec(nombre, lat, lng, id_ciu, id_com, id_reg, id_pai, direccion, numero, dominio, dominio2, atencion_publico, copropiedad, destino, detalle_destino, id_emp)
+				ErrorCheck(err)
 				if err == nil {
 
 					id, err := r.LastInsertId()
