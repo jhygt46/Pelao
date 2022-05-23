@@ -919,7 +919,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad2", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Diego", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad2", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad2(token, id)
@@ -2502,6 +2502,7 @@ func InsertPropiedad2A(db *sql.DB, token string, id int, tipo string, especifica
 		ErrorCheck(err)
 		defer stmt.Close()
 		r, err := stmt.Exec(tipo, especificar_permiso, num_permiso, fecha_permiso, documento, recepcion, recepcion_final, id, id_emp)
+		ErrorCheck(err)
 		if err == nil {
 
 			id, err := r.LastInsertId()
@@ -3226,3 +3227,5 @@ func SendEmail2() {
 
 	fmt.Println(result)
 }
+
+//CREATE DATABASE pelao CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
