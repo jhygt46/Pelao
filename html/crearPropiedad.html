@@ -123,6 +123,11 @@
 </script>
 <div class="mt">
     <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        {{if .FormId}}
+        <a class="back icn r2" title="Crear Propiedad" onclick='navlink("/pages/crearPropiedad2?id={{.FormId}}")'></a>
+        {{end}}
+    </ul>
 </div>
 <hr>
 <div class="i">

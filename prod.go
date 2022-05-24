@@ -2426,7 +2426,7 @@ func UpdatePropiedad(db *sql.DB, token string, id int, nombre string, lat string
 
 		if b1 && b2 && b3 && b4 {
 
-			stmt, err := db.Prepare("UPDATE propiedades SET nombre = ?, lat = ?, lng = ?, ciudad = ?, comuna = ?, region = ?, pais = ?, direccion = ?, numero = ?, dominio = ?, dominio2 = ?, atencion_publico = ?, copropiedad = ?, destino = ?, detalle_destino = ? WHERE id_pro = ? AND id_emp = ?")
+			stmt, err := db.Prepare("UPDATE propiedades SET nombre = ?, lat = ?, lng = ?, id_ciu = ?, id_com = ?, id_reg = ?, id_pai = ?, direccion = ?, numero = ?, dominio = ?, dominio2 = ?, atencion_publico = ?, copropiedad = ?, destino = ?, detalle_destino = ? WHERE id_pro = ? AND id_emp = ?")
 			ErrorCheck(err)
 			_, e := stmt.Exec(nombre, lat, lng, id_ciu, id_com, id_reg, id_pai, direccion, numero, dominio, dominio2, atencion_publico, copropiedad, destino, detalle_destino, id, id_emp)
 			ErrorCheck(e)
@@ -2502,17 +2502,17 @@ func InsertPropiedad2A(db *sql.DB, token string, id int, tipo string, especifica
 		stmt, err := db.Prepare("INSERT INTO permiso_edificacion (tipo, especificar_tipo, numero, fecha, documento, recepcion, recepcion_total, id_pro, id_emp) VALUES (?,?,?,?,?,?,?,?,?)")
 		ErrorCheck(err)
 		defer stmt.Close()
-		r, err := stmt.Exec(tipo, especificar_permiso, num_permiso, fecha_permiso, documento, recepcion, recepcion_final, id, id_emp)
-		ErrorCheck(err)
-		if err == nil {
+		_, e := stmt.Exec(tipo, especificar_permiso, num_permiso, fecha_permiso, documento, recepcion, recepcion_final, id, id_emp)
+		ErrorCheck(e)
+		if e == nil {
 
-			id, err := r.LastInsertId()
-			if err == nil {
-				resp.Op = 1
-				resp.Reload = 1
-				resp.Page = fmt.Sprintf("crearPropiedad3?id=%v", id)
-				resp.Msg = "Propiedad ingresada correctamente"
-			}
+			//id, err := r.LastInsertId()
+			//if err == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = fmt.Sprintf("crearPropiedad3?id=%v", id)
+			resp.Msg = "Propiedad ingresada correctamente"
+			//}
 
 		} else {
 			resp.Msg = "La Propiedad no pudo ser ingresada"
