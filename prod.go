@@ -650,7 +650,9 @@ func UpdateFile(db *sql.DB, token string, folder string, tabla string, campo str
 		log.Println(err)
 	}
 
+	fmt.Println(header.Filename)
 	documento := FileExist(path, header.Filename)
+	fmt.Println(documento)
 	fasthttp.SaveMultipartFile(header, fmt.Sprintf("%s/%s", path, documento))
 
 	sql := fmt.Sprintf("UPDATE %v SET %v = ? WHERE %v = ? AND id_emp = ?", tabla, campo, key)
