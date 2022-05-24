@@ -115,7 +115,7 @@
             <li class="u" rel="{{.Id}}">                
                 <div class="no">{{.Nombre}}</div>
                 <div class="btns clearfix valign">
-                    <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', {{.Id}}, '{{$.DelObj}}', '{{.Nombre}}')"></a>
+                    <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', '{{$.FormId}}/{{.Id}}', '{{$.DelObj}}', '{{.Nombre}}')"></a>
                     <a title="Modificar" class="icn mod" onclick="navlink('{{$.PageMod}}?id={{$.FormId}}&id_rec={{.Id}}')"></a>
                 </div>
             </li>

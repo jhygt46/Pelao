@@ -682,9 +682,7 @@ func UpdateFile(db *sql.DB, token string, folder string, tabla string, campo str
 func Delete(ctx *fasthttp.RequestCtx) {
 
 	resp := Response{}
-
 	ctx.Response.Header.Set("Content-Type", "application/json")
-	id := Read_uint32bytes(ctx.FormValue("id"))
 	token := string(ctx.Request.Header.Cookie("cu"))
 
 	db, err := GetMySQLDB()
@@ -693,10 +691,16 @@ func Delete(ctx *fasthttp.RequestCtx) {
 
 	switch string(ctx.FormValue("accion")) {
 	case "borrar_empresa":
+		id := Read_uint32bytes(ctx.FormValue("id"))
 		resp = BorrarEmpresa(db, token, id)
 	case "borrar_propiedad":
+		id := Read_uint32bytes(ctx.FormValue("id"))
 		resp = BorrarPropiedad(db, token, id)
+	case "borrar_permiso":
+		id := string(ctx.FormValue("id"))
+		resp = BorrarPermiso(db, token, id)
 	case "borrar_usuarios":
+		id := Read_uint32bytes(ctx.FormValue("id"))
 		resp = BorrarUsuario(db, token, id)
 	default:
 
@@ -900,7 +904,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Datos Generales", "Completar los datos", "Lista de Propiedades", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
+			obj := GetTemplateConf("Crear Propiedad", "Datos Generales", "Completar los datos", "Lista de Propiedades", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_propiedad", "Propiedad")
 			lista, found := GetPropiedades(token)
 			if found {
 				obj.Lista = lista
@@ -974,7 +978,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Permisos de Edificación", "Completar los datos", "Lista de Permisos de Edificación", "guardar_propiedad2A", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Permisos de Edificación", "Completar los datos", "Lista de Permisos de Edificación", "guardar_propiedad2A", fmt.Sprintf("/pages/%s", name), "borrar_permiso", "Permiso Edificación")
 
 			if id > 0 {
 				aux, found := GetPropiedad2(token, id)
@@ -2740,6 +2744,41 @@ func BorrarPropiedad(db *sql.DB, token string, id int) Response {
 		resp.Tipo = "error"
 		resp.Titulo = "Error al eliminar propiedad"
 		resp.Texto = "No tiene los permisos"
+	}
+	return resp
+}
+func BorrarPermiso(db *sql.DB, token string, id string) Response {
+
+	resp := Response{}
+	s := strings.Split(id, "/")
+	if len(s) == 2 {
+		if found, id_emp := Permisos(token, 1); found {
+			del := 1
+			stmt, err := db.Prepare("UPDATE permiso_edificacion SET eliminado = ? WHERE id_rec = ? AND id_pro = ? AND id_emp = ?")
+			ErrorCheck(err)
+			_, e := stmt.Exec(del, s[1], s[0], id_emp)
+			ErrorCheck(e)
+			if e == nil {
+				resp.Tipo = "success"
+				resp.Reload = 1
+				resp.Page = fmt.Sprintf("crearPropiedad2PermisoEdificacion?id=%v", s[0])
+				resp.Titulo = "Permiso Edificacion eliminado"
+				resp.Texto = "Permiso Edificacion eliminado correctamente"
+			} else {
+				resp.Tipo = "error"
+				resp.Titulo = "Error al eliminar Permiso Edificacion"
+				resp.Texto = "El Permiso Edificacion no pudo ser eliminada"
+			}
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar Permiso Edificacion"
+			resp.Texto = "No tiene los permisos"
+		}
+
+	} else {
+		resp.Tipo = "error"
+		resp.Titulo = "Error al eliminar Permiso Edificacion"
+		resp.Texto = "Error inesperado"
 	}
 	return resp
 }
