@@ -32,10 +32,12 @@
         <div class="fct">
             <h1>{{.SubTitulo}}</h1>
             <h2>{{.SubTitulo2}}</h2>
+            <!--
             <ul class="clearfix valign">
                 <li class="back" onclick="backurl()"></li>
                 <li class="back" onclick="backurl()"></li>
             </ul>
+            -->
         </div>
         <form action="" method="post" class="basic-grey">
             <fieldset>
@@ -62,7 +64,7 @@
                 </label>
                 <label class="gp" {{if eq .Gp 1}}style="display:block"{{else}}style="display:none"{{end}}>
                     <span>Documento:</span>
-                    <input id="doc_subarriendo" type="file" require="" placeholder="" />
+                    <input id="doc_gp" type="file" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
                 <label>

@@ -498,35 +498,35 @@ func Save(ctx *fasthttp.RequestCtx) {
 			resp = UpdatePropiedad3(db, token, id, electrico_te1, dotacion_ap, dotacion_alcance, instalacion_ascensor, te1_ascensor, certificado_ascensor, clima, seguridad_incendio)
 			header1, err := ctx.FormFile("doc_electrico_te1")
 			if err == nil && header1 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_electrico_te1", "id_pro", id, header1)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_electrico_te1", "id_pro", id, header1)
 			}
 			header2, err := ctx.FormFile("doc_dotacion_ap")
 			if err == nil && header2 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_dotacion_ap", "id_pro", id, header2)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_dotacion_ap", "id_pro", id, header2)
 			}
 			header3, err := ctx.FormFile("doc_dotacion_alcance")
 			if err == nil && header3 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_dotacion_alcance", "id_pro", id, header3)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_dotacion_alcance", "id_pro", id, header3)
 			}
 			header4, err := ctx.FormFile("doc_instalacion_ascensor")
 			if err == nil && header4 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_instalacion_ascensor", "id_pro", id, header4)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_instalacion_ascensor", "id_pro", id, header4)
 			}
 			header5, err := ctx.FormFile("doc_te1_ascensor")
 			if err == nil && header5 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_te1_ascensor", "id_pro", id, header5)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_te1_ascensor", "id_pro", id, header5)
 			}
 			header6, err := ctx.FormFile("doc_certificado_ascensor")
 			if err == nil && header6 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_certificado_ascensor", "id_pro", id, header6)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_certificado_ascensor", "id_pro", id, header6)
 			}
 			header7, err := ctx.FormFile("doc_clima")
 			if err == nil && header7 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_clima", "id_pro", id, header7)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_clima", "id_pro", id, header7)
 			}
 			header8, err := ctx.FormFile("doc_seguridad_incendio")
 			if err == nil && header8 != nil {
-				UpdateFile(db, token, "propiedades", "situaciontecnica", "doc_seguridad_incendio", "id_pro", id, header8)
+				UpdateFile(db, token, "situaciontecnica", "propiedades", "doc_seguridad_incendio", "id_pro", id, header8)
 			}
 		}
 	case "guardar_propiedad4":
@@ -554,6 +554,18 @@ func Save(ctx *fasthttp.RequestCtx) {
 
 		if id > 0 {
 			resp = UpdatePropiedad5(db, token, id, dom_nom_propietario, gp, planos_archivados)
+			header1, err := ctx.FormFile("doc_dom_nom_propietario")
+			if err == nil && header1 != nil {
+				UpdateFile(db, token, "situacionlegal", "propiedades", "doc_domnompropietario", "id_pro", id, header1)
+			}
+			header2, err := ctx.FormFile("doc_gp")
+			if err == nil && header2 != nil {
+				UpdateFile(db, token, "situacionlegal", "propiedades", "doc_gp", "id_pro", id, header2)
+			}
+			header3, err := ctx.FormFile("doc_planos_archivos")
+			if err == nil && header3 != nil {
+				UpdateFile(db, token, "situacionlegal", "propiedades", "doc_plazosarchivos", "id_pro", id, header3)
+			}
 		}
 	case "guardar_propiedad6":
 
@@ -593,6 +605,10 @@ func Save(ctx *fasthttp.RequestCtx) {
 
 		if id > 0 {
 			resp = UpdatePropiedad8(db, token, id, cert_info_previas, tipo_instrumento, detalle_tipo_instrumento, normativo_destino, zona_normativa, usos_permitidos, usos_prohibidos, densidad, coef_constructibilidad, coef_ocupacion_suelo)
+			header1, err := ctx.FormFile("doc_cert_info_previas")
+			if err == nil && header1 != nil {
+				UpdateFile(db, token, "normativo", "propiedades", "doc_cert_info_previas", "id_pro", id, header1)
+			}
 		}
 	case "guardar_usuarios":
 
@@ -637,7 +653,9 @@ func InsertFile(token string, folder string, header *multipart.FileHeader) strin
 	if err != nil {
 		log.Println(err)
 	}
+	fmt.Println(header.Filename)
 	file := FileExist(path, header.Filename)
+	fmt.Println(file)
 	fasthttp.SaveMultipartFile(header, fmt.Sprintf("%s/%s", path, file))
 	return file
 }
