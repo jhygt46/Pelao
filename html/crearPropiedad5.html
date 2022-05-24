@@ -18,12 +18,12 @@
     <h1>{{.Titulo}}</h1>
     <ul class="clearfix valign">
         {{if eq .NextPage 3}}
-        <a class="back icn r1" title="Minicipal" onclick='navlink("/pages/crearPropiedad3?id={{.FormId}}")'></a>
+        <a class="back icn r1" title="Situación Técnica" onclick='navlink("/pages/crearPropiedad3?id={{.FormId}}")'></a>
         {{end}}
         {{if eq .NextPage 4}}
-        <a class="back icn r1" title="Minicipal" onclick='navlink("/pages/crearPropiedad4?id={{.FormId}}")'></a>
+        <a class="back icn r1" title="Situación Comercial" onclick='navlink("/pages/crearPropiedad4?id={{.FormId}}")'></a>
         {{end}}
-        <a class="back icn r2" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad6?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Situación Fiscal" onclick='navlink("/pages/crearPropiedad6?id={{.FormId}}")'></a>
     </ul>
 </div>
 <hr>
@@ -79,9 +79,9 @@
                     <input id="doc_planos_archivos" type="file" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
-                <label>
+                <div>
                     <input type="button" onclick="fm(this)" value="Enviar">
-                </label>
+                </div>
             </fieldset>
         </form>
     </div>

@@ -61,12 +61,12 @@
 <div class="mt">
     <h1>{{.Titulo}}</h1>
     <ul class="clearfix valign">
-        <a class="back icn r1" title="Minicipal" onclick='navlink("/pages/crearPropiedad2PermisoEdificacion?id={{.FormId}}")'></a>
+        <a class="back icn r1" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad2PermisoEdificacion?id={{.FormId}}")'></a>
         {{if eq .NextPage 4}}
-        <a class="back icn r2" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad4?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Situación Comercial" onclick='navlink("/pages/crearPropiedad4?id={{.FormId}}")'></a>
         {{end}}
         {{if eq .NextPage 5}}
-        <a class="back icn r2" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Situación Legal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
         {{end}}
     </ul>
 </div>
@@ -205,9 +205,9 @@
                     <input id="doc_seguridad_incendio" type="file" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
-                <label>
+                <div>
                     <input type="button" onclick="fm(this)" value="Enviar">
-                </label>
+                </div>
             </fieldset>
         </form>
     </div>

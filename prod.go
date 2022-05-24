@@ -60,8 +60,8 @@ type TemplateConf struct {
 	FormNombre         string  `json:"FormNombre"`
 	Direccion          string  `json:"Direccion"`
 	Nombre             string  `json:"Nombre"`
-	Lat                string  `json:"Lat"`
-	Lng                string  `json:"Lng"`
+	Lat                float64 `json:"Lat"`
+	Lng                float64 `json:"Lng"`
 	Numero             string  `json:"Numero"`
 	Comuna             string  `json:"Comuna"`
 	Ciudad             string  `json:"Ciudad"`
@@ -176,8 +176,8 @@ type Lista struct {
 type Data struct {
 	Nombre          string  `json:"Nombre"`
 	Direccion       string  `json:"Direccion"`
-	Lat             string  `json:"Lat"`
-	Lng             string  `json:"Lng"`
+	Lat             float64 `json:"Lat"`
+	Lng             float64 `json:"Lng"`
 	Dominio         int     `json:"Dominio"`
 	Dominio2        int     `json:"Dominio2"`
 	Precio          float64 `json:"Precio"`
@@ -185,7 +185,7 @@ type Data struct {
 	Copropiedad     int     `json:"Copropiedad"`
 	Destino         int     `json:"Destino"`
 	Detalle         int     `json:"Detalle"`
-	Numero          int     `json:"Numero"`
+	Numero          string  `json:"Numero"`
 
 	Comuna string `json:"Comuna"`
 	Ciudad string `json:"Ciudad"`
@@ -880,7 +880,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
+			obj := GetTemplateConf("Crear Propiedad", "Datos Generales", "Completar los datos", "Lista de Propiedades", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
 			lista, found := GetPropiedades(token)
 			if found {
 				obj.Lista = lista
@@ -898,6 +898,9 @@ func Pages(ctx *fasthttp.RequestCtx) {
 					obj.Destino = aux.Destino
 					obj.Detalle = aux.Detalle
 					obj.Direccion = aux.Direccion
+					obj.Lat = aux.Lat
+					obj.Lng = aux.Lng
+					obj.Numero = aux.Numero
 					obj.Comuna = aux.Comuna
 					obj.Ciudad = aux.Ciudad
 					obj.Region = aux.Region
@@ -919,7 +922,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Diego", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad2", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Datos Municipales", "Completar los datos", "", "guardar_propiedad2", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad2(token, id)
@@ -951,7 +954,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad2A", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Permisos de Edificación", "Completar los datos", "Lista de Permisos de Edificación", "guardar_propiedad2A", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad2(token, id)
@@ -997,7 +1000,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad3", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Situación Técnica", "Completar los datos", "", "guardar_propiedad3", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad3(token, id)
@@ -1037,7 +1040,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad4", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Situación Comercial", "Completar los datos", "", "guardar_propiedad4", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad4(token, id)
@@ -1073,7 +1076,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad5", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Situación Legal", "Completar los datos", "", "guardar_propiedad5", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad5(token, id)
@@ -1109,7 +1112,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad6", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Situación Fiscal", "Completar los datos", "", "guardar_propiedad6", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad6(token, id)
@@ -1142,7 +1145,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad7", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Avalúo Comercial", "Completar los datos", "", "guardar_propiedad7", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad7(token, id)
@@ -1172,7 +1175,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
-			obj := GetTemplateConf("Crear Propiedad", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_propiedad8", fmt.Sprintf("/pages/%s", name), "", "")
+			obj := GetTemplateConf("Crear Propiedad", "Normativo", "Completar los datos", "", "guardar_propiedad8", fmt.Sprintf("/pages/%s", name), "", "")
 
 			if id > 0 {
 				aux, found := GetPropiedad8(token, id)
@@ -1715,9 +1718,9 @@ func GetPropiedad(token string, id int) (Data, bool) {
 
 		var nombre string
 		var direccion string
-		var numero int
-		var lat string
-		var lng string
+		var numero string
+		var lat float64
+		var lng float64
 		var dominio int
 		var dominio2 int
 		var atencion_publico int

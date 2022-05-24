@@ -2,8 +2,8 @@
 <div class="mt">
     <h1>{{.Titulo}}</h1>
     <ul class="clearfix valign">
-        <a class="back icn r1" title="Minicipal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
-        <a class="back icn r2" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad7?id={{.FormId}}")'></a>
+        <a class="back icn r1" title="Situación Legal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Avalúo Comercial" onclick='navlink("/pages/crearPropiedad7?id={{.FormId}}")'></a>
     </ul>
 </div>
 <hr>
@@ -73,9 +73,9 @@
                     <input id="contribucion_fiscal" type="text" value="{{.ContribucionFiscal}}" require="" placeholder="" />
                     <div class="mensaje"></div>
                 </label>
-                <label>
+                <div>
                     <input type="button" onclick="fm(this)" value="Enviar">
-                </label>
+                </div>
             </fieldset>
         </form>
     </div>

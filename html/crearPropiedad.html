@@ -49,11 +49,19 @@
     }
     function initMap() {
 
+        {{if .FormId}}
+        var position = { lat: {{.Lat}}, lng: {{.Lng}} };
+        var zoom = 15;
+        {{else}}
         var position = { lat: -25.344, lng: 131.036 };
+        var zoom = 4;
+        {{end}}
+
         map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 4,
+            zoom: zoom,
             center: position,
         });
+        
         marker = new google.maps.Marker({
             position: position,
             map: map,
@@ -125,7 +133,7 @@
     <h1>{{.Titulo}}</h1>
     <ul class="clearfix valign">
         {{if .FormId}}
-        <a class="back icn r2" title="Crear Propiedad" onclick='navlink("/pages/crearPropiedad2?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Datos Municipales" onclick='navlink("/pages/crearPropiedad2?id={{.FormId}}")'></a>
         {{end}}
     </ul>
 </div>
@@ -135,10 +143,12 @@
         <div class="fct">
             <h1>{{.SubTitulo}}</h1>
             <h2>{{.SubTitulo2}}</h2>
+            <!--
             <ul class="clearfix valign">
                 <li class="back" onclick="backurl()"></li>
                 <li class="back" onclick="backurl()"></li>
             </ul>
+            -->
         </div>
         <form action="" method="post" class="basic-grey">
             <fieldset>
@@ -235,9 +245,9 @@
                     </select>
                     <div class="mensaje"></div>
                 </label>
-                <label>
+                <div>
                     <input type="button" onclick="fm(this)" value="Enviar">
-                </label>
+                </div>
             </fieldset>
         </form>
     </div>
@@ -247,11 +257,11 @@
 <div class="i">
     <div class="fc" id="info-0">
         <div class="fct">
-            <h1>{{.SubTitulo}}</h1>
-            <h2>{{.SubTitulo2}}</h2>
+            <h1>{{.TituloLista}}</h1>
+            <h2></h2>
             <ul class="clearfix valign">
-                <li class="back" onclick="backurl()"></li>
-                <li class="back" onclick="backurl()"></li>
+                <li class="back icn ic1" onclick="backurl()"></li>
+                <!--<li class="back" onclick="backurl()"></li>-->
             </ul>
         </div>
         <ul class='lu'>

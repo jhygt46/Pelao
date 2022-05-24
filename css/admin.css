@@ -119,6 +119,7 @@ body{
     padding: 7px 10px;
     color: #fff;
     font-size: 14px;
+    cursor: pointer;
 }
 .co{
     left: 0px;
@@ -283,6 +284,7 @@ body{
     height: 30px;
     background: url('../img/icons-set.png') no-repeat;
     float: left;
+    cursor: pointer;
 }
 .h .mt ul .r1{
     background-position: -596px -334px;
@@ -307,6 +309,8 @@ body{
 .h .i .fc .fct h1{
     font-size: 30px;
     line-height: 24px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 .h .i .fc .fct h2{
     font-size: 14px;
@@ -314,10 +318,15 @@ body{
 .h .i .fc .fct ul{
     right: 0px;
 }
+.h .i .fc .fct ul .icn{
+    background: url('../img/icons-set.png') no-repeat;
+}
+.h .i .fc .fct ul .ic1{
+    background-position: -775px -672px;
+}
 .h .i .fc .fct ul li{
     width: 30px;
     height: 30px;
-    background: #000;
     float: left;
 }
 .h .i .fc .lu{
@@ -504,6 +513,7 @@ body{
     background: #999;
     font-size: 12px;
     box-shadow: 1px 1px 5px #999;
+    cursor: pointer;
 }
 .basic-grey input[type="button"]:hover {
     background: #9f9f9f;
