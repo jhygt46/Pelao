@@ -9,51 +9,48 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type Idioma struct {
-	Page int
-	Text []string
+//19 de octubre a las 16:45
+
+type Palabras struct {
+	I uint32 `json:"I"`
+	T uint32 `json:"T"`
+	N string `json:"N"`
 }
 
 func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	if string(ctx.Method()) == "GET" {
 		switch string(ctx.Path()) {
-		case "/autoCuad":
-			/*
-				var p []int32
-				if err := json.Unmarshal(ctx.QueryArgs().Peek("c"), &p); err == nil {
+		case "/auto":
 
-					var bn []int32
-					var key []byte
-					var b strings.Builder
-					b.Write([]byte{91})
+			ctx.Response.Header.Set("Content-Type", "application/json")
+			val := string(ctx.QueryArgs().Peek("c"))
 
-					bn = p[0:2]
-					key = GetKey2(bn, ParamBytes(ctx.QueryArgs().Peek("u")))
-					val, _ := h.Db.Get(key)
-					if len(val) > 0 {
-						WriteResponse(&val, 0, &b, p[2:len(p)])
-					} else {
-						fmt.Println("NOT FOUND DB-CUAD KEY", key)
-					}
+			if val == "ab" {
+				ab := []Palabras{Palabras{I: 1, T: 1, N: "dsa"}, Palabras{I: 1, T: 1, N: "dma"}, Palabras{I: 1, T: 1, N: "dxf"}}
+				json.NewEncoder(ctx).Encode(ab)
+			}
+			if val == "abc" {
+				ab := []Palabras{Palabras{I: 1, T: 1, N: "amda"}, Palabras{I: 1, T: 1, N: "edma"}, Palabras{I: 1, T: 1, N: "idse"}}
+				json.NewEncoder(ctx).Encode(ab)
+			}
+			if val == "abcd" {
+				ab := []Palabras{Palabras{I: 1, T: 1, N: "ocda"}, Palabras{I: 1, T: 1, N: "abra"}, Palabras{I: 1, T: 1, N: "iste"}}
+				json.NewEncoder(ctx).Encode(ab)
+			}
 
-					b.Write([]byte{93})
-					fmt.Fprint(ctx, b.String())
-
-				}
-			*/
 		case "/lang":
 
-			//now := time.Now()
 			ctx.Response.Header.Set("Content-Type", "application/json")
 			val := string(ctx.QueryArgs().Peek("c"))
 			if val == "zr" {
 				zr := []string{"HOLA#MUNDO", "妹妹背著#洋娃娃"}
-
-				//zr := []Idioma{Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}, Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}}
 				json.NewEncoder(ctx).Encode(zr)
 			}
-			//fmt.Println("time elapse:", time.Since(now))
+			if val == "gr" {
+				gr := []string{"HOLA#MUNDO", "妹妹背著#洋娃娃"}
+				json.NewEncoder(ctx).Encode(gr)
+			}
 
 		default:
 			ctx.Error("Not Found", fasthttp.StatusNotFound)
