@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"log"
 
 	"github.com/mithorium/secure-fasthttp"
@@ -15,7 +15,6 @@ type Idioma struct {
 }
 
 func requestHandler(ctx *fasthttp.RequestCtx) {
-	fmt.Fprintf(ctx, "Hello, world!\n")
 
 	if string(ctx.Method()) == "GET" {
 		switch string(ctx.Path()) {
@@ -46,13 +45,12 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 		case "/lang":
 
 			//now := time.Now()
+			ctx.Response.Header.Set("Content-Type", "application/json")
 			val := string(ctx.QueryArgs().Peek("c"))
 			if val == "zr" {
 				zr := []Idioma{Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}, Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}}
-				zr_txt, _ := json.Marshal(zr)
-				fmt.Fprint(ctx, string(zr_txt))
+				json.NewEncoder(ctx).Encode(zr)
 			}
-
 			//fmt.Println("time elapse:", time.Since(now))
 
 		default:
