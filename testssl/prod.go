@@ -31,12 +31,12 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 				json.NewEncoder(ctx).Encode(ab)
 			}
 			if val == "abc" {
-				ab := []Palabras{Palabras{I: 1, T: 1, N: "amda"}, Palabras{I: 1, T: 1, N: "edma"}, Palabras{I: 1, T: 1, N: "idse"}}
-				json.NewEncoder(ctx).Encode(ab)
+				abc := []Palabras{Palabras{I: 1, T: 1, N: "amda"}, Palabras{I: 1, T: 1, N: "edma"}, Palabras{I: 1, T: 1, N: "idse"}}
+				json.NewEncoder(ctx).Encode(abc)
 			}
 			if val == "abcd" {
-				ab := []Palabras{Palabras{I: 1, T: 1, N: "ocda"}, Palabras{I: 1, T: 1, N: "abra"}, Palabras{I: 1, T: 1, N: "iste"}}
-				json.NewEncoder(ctx).Encode(ab)
+				abcd := []Palabras{Palabras{I: 1, T: 1, N: "ocda"}, Palabras{I: 1, T: 1, N: "abra"}, Palabras{I: 1, T: 1, N: "iste"}}
+				json.NewEncoder(ctx).Encode(abcd)
 			}
 
 		case "/lang":
