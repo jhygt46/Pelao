@@ -48,7 +48,9 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 			ctx.Response.Header.Set("Content-Type", "application/json")
 			val := string(ctx.QueryArgs().Peek("c"))
 			if val == "zr" {
-				zr := []Idioma{Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}, Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}}
+				zr := []string{"HOLA#MUNDO", "BUENA#NELSON"}
+
+				//zr := []Idioma{Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}, Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}}
 				json.NewEncoder(ctx).Encode(zr)
 			}
 			//fmt.Println("time elapse:", time.Since(now))
