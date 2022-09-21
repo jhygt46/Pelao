@@ -2542,7 +2542,8 @@ func InsertPropiedad2A(db *sql.DB, token string, id int, tipo string, especifica
 			//}
 
 		} else {
-			resp.Msg = "La Propiedad no pudo ser ingresada"
+			resp.Msg = "El Permiso no pudo ser ingresado"
+			fmt.Println(e)
 		}
 
 	} else {
