@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -8,8 +9,57 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+type Idioma struct {
+	Page int
+	Text []string
+}
+
 func requestHandler(ctx *fasthttp.RequestCtx) {
 	fmt.Fprintf(ctx, "Hello, world!\n")
+
+	if string(ctx.Method()) == "GET" {
+		switch string(ctx.Path()) {
+		case "/autoCuad":
+			/*
+				var p []int32
+				if err := json.Unmarshal(ctx.QueryArgs().Peek("c"), &p); err == nil {
+
+					var bn []int32
+					var key []byte
+					var b strings.Builder
+					b.Write([]byte{91})
+
+					bn = p[0:2]
+					key = GetKey2(bn, ParamBytes(ctx.QueryArgs().Peek("u")))
+					val, _ := h.Db.Get(key)
+					if len(val) > 0 {
+						WriteResponse(&val, 0, &b, p[2:len(p)])
+					} else {
+						fmt.Println("NOT FOUND DB-CUAD KEY", key)
+					}
+
+					b.Write([]byte{93})
+					fmt.Fprint(ctx, b.String())
+
+				}
+			*/
+		case "/lang":
+
+			//now := time.Now()
+			val := string(ctx.QueryArgs().Peek("c"))
+			if val == "zr" {
+				zr := []Idioma{Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}, Idioma{Page: 1, Text: []string{"apple", "peach", "pear"}}}
+				zr_txt, _ := json.Marshal(zr)
+				fmt.Fprint(ctx, string(zr_txt))
+			}
+
+			//fmt.Println("time elapse:", time.Since(now))
+
+		default:
+			ctx.Error("Not Found", fasthttp.StatusNotFound)
+		}
+	}
+
 }
 
 func main() {
