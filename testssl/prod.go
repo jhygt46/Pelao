@@ -48,7 +48,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 				json.NewEncoder(ctx).Encode(zr)
 			}
 			if val == "gr" {
-				gr := []string{"HOLA#MUNDO", "妹妹背著#洋娃娃"}
+				gr := [][]string{[]string{"HOLA MUNDO", "妹妹背著 洋娃娃"}, []string{"HOLA MUNDO", "妹妹背著 洋娃娃"}}
 				json.NewEncoder(ctx).Encode(gr)
 			}
 
