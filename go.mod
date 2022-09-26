@@ -13,6 +13,7 @@ require (
 	github.com/klauspost/compress v1.14.1 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mithorium/secure-fasthttp v0.0.0-20161207145432-6499985a395f // indirect
 	github.com/radovskyb/watcher v1.0.7 // indirect
 	github.com/savsgio/gotils v0.0.0-20211223103454-d0aaa54c5899 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

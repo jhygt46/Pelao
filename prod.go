@@ -24,6 +24,7 @@ import (
 
 	"github.com/fasthttp/router"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/mithorium/secure-fasthttp"
 	"github.com/valyala/fasthttp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -393,7 +394,16 @@ func main() {
 		r.POST("/delete", Delete)
 		r.GET("/salir", Salir)
 		r.GET("/SetEmpresa/{name}", SetEmpresa)
-		fasthttp.ListenAndServe(port, r.Handler)
+
+		// ANTES
+		//fasthttp.ListenAndServe(port, r.Handler)
+
+		// DESPUES
+		secureMiddleware := secure.New(secure.Options{SSLRedirect: true})
+		secureHandler := secureMiddleware.Handler(r.Handler)
+		go func() { log.Fatal(fasthttp.ListenAndServe(":80", secureHandler)) }()
+		log.Fatal(fasthttp.ListenAndServeTLS(":443", "/etc/letsencrypt/live/www.redigo.cl/fullchain.pem", "/etc/letsencrypt/live/www.redigo.cl/privkey.pem", secureHandler))
+
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
