@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -49,8 +50,20 @@ type Giros struct {
 type Config struct {
 	Tiempo time.Duration `json:"Tiempo"`
 }
+
+type ListaPropAlert struct {
+	Id_pro int `json:"Id_pro"`
+	Pagina int `json:"Pagina"`
+}
+type ListaNewAlert struct {
+	Id_ale int       `json:"Id_ale"`
+	Tiempo time.Time `json:"Tiempo"`
+}
+
 type MyHandler struct {
-	Conf Config `json:"Conf"`
+	Conf            Config           `json:"Conf"`
+	ListaPropAlerts []ListaPropAlert `json:"ListaPropAlerts"`
+	ListaNewAlerts  []ListaNewAlert  `json:"ListaNewAlerts"`
 }
 type TemplateConf struct {
 	Titulo             string  `json:"Titulo"`
@@ -145,6 +158,24 @@ type TemplateConf struct {
 
 	NextPage int `json:"NextPage"`
 
+	TipoAlerta       int    `json:"TipoAlerta"`
+	TipoNotificacion int    `json:"TipoNotificacion"`
+	Descripcion      string `json:"Descripcion"`
+
+	Pagina int `json:"Pagina"`
+	Campo1 int `json:"Campo1"`
+	Campo2 int `json:"Campo2"`
+	Campo3 int `json:"Campo3"`
+	Campo4 int `json:"Campo4"`
+	Campo5 int `json:"Campo5"`
+	Campo6 int `json:"Campo6"`
+	Campo7 int `json:"Campo7"`
+	Campo8 int `json:"Campo8"`
+	Valor  int `json:"Valor"`
+
+	ValorCampo string `json:"ValorCampo"`
+	FormIdAle  int    `json:"FormIdAle"`
+
 	P0 bool `json:"P0"`
 	P1 bool `json:"P1"`
 	P2 bool `json:"P2"`
@@ -157,7 +188,9 @@ type TemplateConf struct {
 	P9 bool `json:"P9"`
 }
 type TemplateInicio struct {
-	Titulo string `json:"Titulo"`
+	Nombre string  `json:"Nombre"`
+	Precio float64 `json:"Precio"`
+	UF     int     `json:"UF"`
 }
 type UfRes struct {
 	Version       string    `json:"version"`
@@ -174,6 +207,11 @@ type UfSerie struct {
 type Lista struct {
 	Id     int    `json:"Id"`
 	Nombre string `json:"Nombre"`
+	Aux    int    `json:"Aux"`
+}
+type Empresa struct {
+	Nombre string  `json:"Nombre"`
+	Precio float64 `json:"Precio"`
 }
 type Data struct {
 	Nombre          string  `json:"Nombre"`
@@ -256,6 +294,14 @@ type Data struct {
 	CoefConstructibilidad  string `json:"CoefConstructibilidad"`
 	CoefOcupacionSuelo     string `json:"CoefOcupacionSuelo"`
 
+	Descripcion  string `json:"Descripcion"`
+	Alerta       int    `json:"Alerta"`
+	Notificacion int    `json:"Notificacion"`
+
+	Pagina     int    `json:"Pagina"`
+	Campo      int    `json:"Campo"`
+	ValorCampo string `json:"ValorCampo"`
+
 	P0 bool `json:"P0"`
 	P1 bool `json:"P1"`
 	P2 bool `json:"P2"`
@@ -337,6 +383,8 @@ var (
 	port       string
 )
 
+var pass = &MyHandler{Conf: Config{}}
+
 func main() {
 
 	//SendEmail()
@@ -355,7 +403,8 @@ func main() {
 		port = ":80"
 	}
 
-	pass := &MyHandler{Conf: Config{}}
+	//pass := &MyHandler{Conf: Config{}}
+
 	con := context.Background()
 	con, cancel := context.WithCancel(con)
 	signalChan := make(chan os.Signal, 1)
@@ -433,6 +482,58 @@ func Save(ctx *fasthttp.RequestCtx) {
 		}
 		if id > 0 {
 			resp = UpdateEmpresa(db, token, id, nombre, precio)
+		}
+	case "guardar_alerta":
+
+		nombre := string(ctx.FormValue("nombre"))
+		descripcion := string(ctx.FormValue("descripcion"))
+		alerta := string(ctx.FormValue("tipo_alerta"))
+		notificacion := string(ctx.FormValue("notificacion"))
+		precio := string(ctx.FormValue("precio"))
+		if id == 0 {
+			resp = InsertAlerta(db, token, nombre, descripcion, alerta, notificacion, precio)
+		}
+		if id > 0 {
+			resp = UpdateAlerta(db, token, id, nombre, descripcion, alerta, notificacion, precio)
+		}
+	case "guardar_regla":
+
+		id_ale := Read_uint32bytes(ctx.FormValue("id_ale"))
+		nombre := string(ctx.FormValue("nombre"))
+		pagina := string(ctx.FormValue("pagina"))
+		valor := string(ctx.FormValue("valor"))
+		campo := ""
+
+		if pagina == "1" {
+			campo = string(ctx.FormValue("pagina1"))
+		}
+		if pagina == "2" {
+			campo = string(ctx.FormValue("pagina2"))
+		}
+		if pagina == "3" {
+			campo = string(ctx.FormValue("pagina3"))
+		}
+		if pagina == "4" {
+			campo = string(ctx.FormValue("pagina4"))
+		}
+		if pagina == "5" {
+			campo = string(ctx.FormValue("pagina5"))
+		}
+		if pagina == "6" {
+			campo = string(ctx.FormValue("pagina6"))
+		}
+		if pagina == "7" {
+			campo = string(ctx.FormValue("pagina7"))
+		}
+		if pagina == "8" {
+			campo = string(ctx.FormValue("pagina8"))
+		}
+
+		if id == 0 {
+			resp = InsertRegla(db, token, nombre, pagina, campo, valor, id_ale)
+		}
+		if id > 0 {
+			resp = UpdateRegla(db, token, id, nombre, pagina, campo, valor, id_ale)
 		}
 	case "guardar_propiedad1":
 
@@ -823,15 +924,17 @@ func Pages(ctx *fasthttp.RequestCtx) {
 	switch name {
 	case "inicioEmpresa":
 
-		if found, _ := Permisos(token, 1); found {
+		if found, id_emp := Permisos(token, 1); found {
 
-			id_emp := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 			obj := TemplateInicio{}
 			aux, found := GetEmpresa(id_emp)
 			if found {
-				obj.Titulo = aux.Nombre
+				obj.Nombre = aux.Nombre
+				obj.Precio = aux.Precio
+				obj.UF = GetUF()
+				fmt.Println(GetResumenPropiedades(id_emp))
 			}
 			err = t.Execute(ctx, obj)
 			ErrorCheck(err)
@@ -859,6 +962,106 @@ func Pages(ctx *fasthttp.RequestCtx) {
 					obj.FormPrecio = aux.Precio
 					obj.FormId = id
 				}
+			} else {
+				obj.FormId = 0
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+	case "crearAlerta":
+
+		if SuperAdmin(token) {
+
+			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Crear Alerta", "Nueva Alerta", "Configurar", "Titulo Lista", "guardar_alerta", fmt.Sprintf("/pages/%s", name), "borrar_alerta", "Alerta")
+			lista, found := GetAlertas()
+			if found {
+				obj.Lista = lista
+			}
+
+			if id > 0 {
+				aux, found := GetAlerta(id)
+				if found {
+					obj.FormNombre = aux.Nombre
+					obj.Descripcion = aux.Descripcion
+					obj.FormPrecio = aux.Precio
+					obj.TipoAlerta = aux.Alerta
+					obj.TipoNotificacion = aux.Notificacion
+					obj.FormId = id
+				}
+			} else {
+				obj.FormId = 0
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+	case "crearRegla":
+
+		if SuperAdmin(token) {
+
+			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+			id_ale := Read_uint32bytes(ctx.QueryArgs().Peek("id_ale"))
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Regla Alerta", "Configurar Regla", "Configurar", "Lista de Reglas", "guardar_regla", fmt.Sprintf("/pages/%s", name), "borrar_regla", "Regla")
+
+			if id_ale > 0 {
+
+				aux, found := GetAlerta(id_ale)
+				if found {
+					obj.FormNombre = aux.Nombre
+					obj.FormIdAle = id_ale
+
+					lista, found := GetReglas(id_ale)
+					if found {
+						obj.Lista = lista
+					}
+
+					if id > 0 {
+						aux2, found2 := GetRegla(id)
+						if found2 {
+
+							obj.FormId = id
+							obj.Nombre = aux2.Nombre
+							obj.Pagina = aux2.Pagina
+							if aux2.Pagina == 1 {
+								obj.Campo1 = aux2.Campo
+							}
+							if aux2.Pagina == 2 {
+								obj.Campo2 = aux2.Campo
+							}
+							if aux2.Pagina == 3 {
+								obj.Campo3 = aux2.Campo
+							}
+							if aux2.Pagina == 4 {
+								obj.Campo4 = aux2.Campo
+							}
+							if aux2.Pagina == 5 {
+								obj.Campo5 = aux2.Campo
+							}
+							if aux2.Pagina == 6 {
+								obj.Campo6 = aux2.Campo
+							}
+							if aux2.Pagina == 7 {
+								obj.Campo7 = aux2.Campo
+							}
+							if aux2.Pagina == 8 {
+								obj.Campo8 = aux2.Campo
+							}
+							obj.ValorCampo = aux2.ValorCampo
+
+						}
+					}
+				}
+
 			} else {
 				obj.FormId = 0
 			}
@@ -909,14 +1112,14 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		}
 	case "crearPropiedad":
 
-		if found, _ := Permisos(token, 1); found {
+		if found, id_emp := Permisos(token, 1); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Datos Generales", "Completar los datos", "Lista de Propiedades", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_propiedad", "Propiedad")
-			lista, found := GetPropiedades(token)
+			lista, found := GetPropiedades(id_emp)
 			if found {
 				obj.Lista = lista
 			}
@@ -1480,9 +1683,9 @@ func SuperAdmin(token string) bool {
 		return false
 	}
 }
-func GetEmpresa(id int) (Data, bool) {
+func GetEmpresa(id int) (Empresa, bool) {
 
-	data := Data{}
+	data := Empresa{}
 
 	db, err := GetMySQLDB()
 	defer db.Close()
@@ -1534,6 +1737,136 @@ func GetEmpresas() ([]Lista, bool) {
 		err := res.Scan(&id, &nombre)
 		ErrorCheck(err)
 		data = append(data, Lista{Id: id, Nombre: nombre})
+		b = true
+
+	}
+	return data, b
+}
+func GetAlerta(id int) (Data, bool) {
+
+	data := Data{}
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT nombre, descripcion, alerta, notificacion, precio FROM alertas WHERE id_ale = ? AND eliminado = ?", id, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+
+		var nombre string
+		var descripcion string
+		var alerta int
+		var notificacion int
+		var precio float64
+		err := res.Scan(&nombre, &descripcion, &alerta, &notificacion, &precio)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data.Nombre = nombre
+		data.Precio = precio
+		data.Descripcion = descripcion
+		data.Alerta = alerta
+		data.Notificacion = notificacion
+		data.Precio = precio
+		return data, true
+
+	} else {
+		return data, false
+	}
+}
+func GetAlertas() ([]Lista, bool) {
+
+	data := []Lista{}
+	b := false
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT id_ale, nombre, alerta FROM alertas WHERE eliminado = ?", cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var id int
+	var nombre string
+	var alerta int
+
+	for res.Next() {
+
+		err := res.Scan(&id, &nombre, &alerta)
+		ErrorCheck(err)
+		data = append(data, Lista{Id: id, Nombre: nombre, Aux: alerta})
+		b = true
+
+	}
+	return data, b
+}
+func GetRegla(id int) (Data, bool) {
+
+	data := Data{}
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT pagina, campo, valor, nombre FROM alerta_regla WHERE id_alr = ? AND eliminado = ?", id, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+
+		var pagina int
+		var campo int
+		var valor string
+		var nombre string
+		err := res.Scan(&pagina, &campo, &valor, &nombre)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data.Pagina = pagina
+		data.Campo = campo
+		data.ValorCampo = valor
+		data.Nombre = nombre
+		return data, true
+
+	} else {
+		return data, false
+	}
+}
+func GetReglas(id int) ([]Lista, bool) {
+
+	data := []Lista{}
+	b := false
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT id_alr, nombre FROM alerta_regla WHERE eliminado = ? AND id_ale = ?", cn, id)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var ids int
+	var nombre string
+
+	for res.Next() {
+
+		err := res.Scan(&ids, &nombre)
+		ErrorCheck(err)
+		data = append(data, Lista{Id: ids, Nombre: nombre})
 		b = true
 
 	}
@@ -1704,7 +2037,45 @@ func PermisosEdificacion(id int) ([]Lista, bool) {
 	return data, b
 }
 
-func GetPropiedades(token string) ([]Lista, bool) {
+type ResumenProd struct {
+	Id     int    `json:"Id"`
+	Nombre string `json:"Nombre"`
+}
+
+func GetResumenPropiedades(id_emp int) ([]ResumenProd, bool) {
+
+	//m := make(map[int]int)
+
+	data := []ResumenProd{}
+	b := false
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT t1.id_pro as id_pro, t1.nombre as nombre FROM propiedades t1, propiedad_alerta t2, alertas t3 WHERE t1.id_emp = ? AND t1.eliminado = ? AND t1.id_pro=t2.id_pro AND t2.id_ale=t3.id_ale AND t3.eliminado = ?", id_emp, cn, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for res.Next() {
+
+		var id_pro int
+		var nombre string
+		err := res.Scan(&id_pro, &nombre)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data = append(data, ResumenProd{Id: id_pro, Nombre: nombre})
+		b = true
+
+	}
+	return data, b
+}
+
+func GetPropiedades(id_emp int) ([]Lista, bool) {
 
 	data := []Lista{}
 	b := false
@@ -1715,7 +2086,7 @@ func GetPropiedades(token string) ([]Lista, bool) {
 
 	cn := 0
 
-	res, err := db.Query("SELECT id_pro, nombre FROM propiedades WHERE id_emp = ? AND eliminado = ?", GetIdEmp(token), cn)
+	res, err := db.Query("SELECT id_pro, nombre FROM propiedades WHERE id_emp = ? AND eliminado = ?", id_emp, cn)
 	defer res.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -1792,10 +2163,6 @@ func GetPropiedad(token string, id int) (Data, bool) {
 	}
 }
 func GetCiudadNombre(db *sql.DB, id_ciu int, id_reg int, id_pai int) string {
-
-	db, err := GetMySQLDB()
-	defer db.Close()
-	ErrorCheck(err)
 
 	res, err := db.Query("SELECT nombre FROM ciudades WHERE id_ciu = ? AND id_reg = ? AND id_pai = ?", id_ciu, id_reg, id_pai)
 	defer res.Close()
@@ -1879,7 +2246,6 @@ func GetPaisNombre(db *sql.DB, id_pai int) string {
 		return ""
 	}
 }
-
 func GetPropiedad2(token string, id int) (Data, bool) {
 
 	data := Data{}
@@ -2224,7 +2590,6 @@ func GetPropiedad8(token string, id int) (Data, bool) {
 		return data, false
 	}
 }
-
 func GetUF() int {
 
 	db, err := GetMySQLDB()
@@ -2407,7 +2772,6 @@ func GetLocalidades(db *sql.DB, id_emp int) Localidades {
 
 	return Localidades{Paises: paises, Regiones: regiones, Ciudades: ciudades, Comunas: comunas, Propiedades: propiedades}
 }
-
 func InsertPropiedad(db *sql.DB, token string, nombre string, lat string, lng string, comuna string, ciudad string, region string, pais string, direccion string, numero string, dominio string, dominio2 string, atencion_publico string, copropiedad string, destino string, detalle_destino string) Response {
 
 	resp := Response{}
@@ -2564,6 +2928,8 @@ func InsertPropiedad2A(db *sql.DB, token string, id int, tipo string, especifica
 }
 func UpdatePropiedad3(db *sql.DB, token string, id int, electrico_te1 string, dotacion_ap string, dotacion_alcance string, instalacion_ascensor string, te1_ascensor string, certificado_ascensor string, clima string, seguridad_incendio string) Response {
 
+	AddPass1(id, 3)
+
 	resp := Response{}
 	resp.Op = 2
 	if found, id_emp := Permisos(token, 1); found {
@@ -2689,6 +3055,8 @@ func UpdatePropiedad6(db *sql.DB, token string, id int, fiscal_serie string, fis
 }
 func UpdatePropiedad7(db *sql.DB, token string, id int, valor_terreno string, valor_edificacion string, valor_obras_complementarias string, valor_total string) Response {
 
+	AddPass1(id, 7)
+
 	resp := Response{}
 	resp.Op = 2
 	if found, id_emp := Permisos(token, 1); found {
@@ -2731,7 +3099,6 @@ func UpdatePropiedad8(db *sql.DB, token string, id int, cert_info_previas string
 	}
 	return resp
 }
-
 func BorrarPropiedad(db *sql.DB, token string, id int) Response {
 
 	resp := Response{}
@@ -2862,7 +3229,6 @@ func BorrarUsuario(db *sql.DB, token string, id int) Response {
 	}
 	return resp
 }
-
 func InsertEmpresa(db *sql.DB, token string, nombre string, precio string) Response {
 
 	resp := Response{}
@@ -2934,7 +3300,185 @@ func BorrarEmpresa(db *sql.DB, token string, id int) Response {
 	}
 	return resp
 }
+func InsertRegla(db *sql.DB, token string, nombre string, pagina string, campo string, valor string, id_ale int) Response {
 
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("INSERT INTO alerta_regla (nombre, pagina, campo, valor, id_ale) VALUES (?,?,?,?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		_, e := stmt.Exec(nombre, pagina, campo, valor, id_ale)
+		ErrorCheck(e)
+		if err == nil {
+			GetPageAlert(db, id_ale)
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = fmt.Sprintf("crearRegla?id_ale=%v", id_ale)
+			resp.Msg = "Regla ingresada correctamente"
+		} else {
+			resp.Msg = "La regla no pudo ser ingresada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func UpdateRegla(db *sql.DB, token string, id int, nombre string, pagina string, campo string, valor string, id_ale int) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("UPDATE alerta_regla SET nombre = ?, pagina = ?, campo = ?, valor = ? WHERE id_alr = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(nombre, pagina, campo, valor, id)
+		ErrorCheck(e)
+		if e == nil {
+			GetPageAlert(db, id_ale)
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = fmt.Sprintf("crearRegla?id_ale=%v", id_ale)
+			resp.Msg = "Regla actualizada correctamente"
+		} else {
+			resp.Msg = "La regla no pudo ser actualizada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func BorrarRegla(db *sql.DB, token string, id string) Response {
+
+	resp := Response{}
+	s := strings.Split(id, "/")
+	if len(s) == 2 {
+		if SuperAdmin(token) {
+			del := 1
+			stmt, err := db.Prepare("UPDATE alerta_regla SET eliminado = ? WHERE id_alr = ? AND id_ale = ?")
+			ErrorCheck(err)
+			_, e := stmt.Exec(del, s[1], s[0])
+			ErrorCheck(e)
+			if e == nil {
+
+				intVar, ers := strconv.Atoi(s[0])
+				ErrorCheck(ers)
+				GetPageAlert(db, intVar)
+				resp.Tipo = "success"
+				resp.Reload = 1
+				resp.Page = fmt.Sprintf("crearRegla?id=%v", s[0])
+				resp.Titulo = "Regla eliminada"
+				resp.Texto = "Regla eliminada correctamente"
+			} else {
+				resp.Tipo = "error"
+				resp.Titulo = "Error al eliminar regla"
+				resp.Texto = "La regla no pudo ser eliminada"
+			}
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar regla"
+			resp.Texto = "No tiene los permisos"
+		}
+	} else {
+		resp.Tipo = "error"
+		resp.Titulo = "Error al eliminar regla"
+		resp.Texto = "No tiene los permisos"
+	}
+
+	return resp
+}
+func GetPageAlert(db *sql.DB, id int) {
+
+	cn := 0
+	res, err := db.Query("SELECT MAX(pagina) FROM alerta_regla WHERE id_ale = ? AND eliminado = ?", id, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Next() {
+		var max int
+		err := res.Scan(&max)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		stmt, err := db.Prepare("UPDATE alertas SET pagina = ? WHERE id_ale = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(max, id)
+		ErrorCheck(e)
+
+	}
+}
+func InsertAlerta(db *sql.DB, token string, nombre string, descripcion string, alerta string, notificacion string, precio string) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("INSERT INTO alertas (nombre, descripcion, alerta, notificacion, precio) VALUES (?,?,?,?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		stmt.Exec(nombre, descripcion, alerta, notificacion, precio)
+		if err == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "crearAlerta"
+			resp.Msg = "Alerta ingresada correctamente"
+		} else {
+			resp.Msg = "La alerta no pudo ser ingresada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func UpdateAlerta(db *sql.DB, token string, id int, nombre string, descripcion string, alerta string, notificacion string, precio string) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("UPDATE alertas SET nombre = ?, descripcion = ?, alerta = ?, notificacion = ?, precio = ? WHERE id_ale = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(nombre, descripcion, alerta, notificacion, precio, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "crearAlerta"
+			resp.Msg = "Alerta actualizada correctamente"
+		} else {
+			resp.Msg = "La alerta no pudo ser actualizada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func BorrarAlerta(db *sql.DB, token string, id int) Response {
+
+	resp := Response{}
+	if SuperAdmin(token) {
+		del := 1
+		stmt, err := db.Prepare("UPDATE alertas SET eliminado = ? WHERE id_ale = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(del, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Tipo = "success"
+			resp.Reload = 1
+			resp.Page = "crearAlerta"
+			resp.Titulo = "Alerta eliminada"
+			resp.Texto = "Alerta eliminada correctamente"
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar alerta"
+			resp.Texto = "La alerta no pudo ser eliminada"
+		}
+	} else {
+		resp.Tipo = "error"
+		resp.Titulo = "Error al eliminar alerta"
+		resp.Texto = "No tiene los permisos"
+	}
+	return resp
+}
 func GetPais(db *sql.DB, nombre string) (int64, bool) {
 
 	if nombre != "" {
@@ -3078,10 +3622,215 @@ func GetComuna(db *sql.DB, nombre string, id_pai int64, id_reg int64, id_ciu int
 
 // FUNCTION DB //
 
+type Alerta struct {
+	Id_ale       int      `json:"Id_ale"`
+	Alerta       int      `json:"Alerta"`
+	Notificacion int      `json:"Notificacion"`
+	Campos       []string `json:"Campos"`
+	Valores      []string `json:"Valores"`
+}
+
+func GetAllAlert(id_ale int) {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT id_pro FROM propiedades WHERE eliminado = ?", cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_pro int
+		err := res.Scan(&id_pro)
+		if err != nil {
+			log.Fatal(err)
+		}
+		GetAlertasId(db, id_pro, id_ale)
+	}
+}
+func GetSimpleAlert(id_pro int, pagina int) {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+	GetAlertasPagina(db, id_pro, pagina)
+}
+func GetAlertasId(db *sql.DB, id_pro int, id_ale int) {
+
+	alertas := []Alerta{}
+	id := 0
+
+	cn := 0
+	res, err := db.Query("SELECT t1.id_ale as id_ale, t1.alerta as alerta, t1.notificacion as notificacion, t2.campo as campo, t2.valor as valor FROM alertas t1, alerta_regla t2 WHERE t1.id_ale = ? AND t1.id_ale=t2.id_ale AND t1.eliminado = ? AND t2.eliminado = ?", id_ale, cn, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_ale int
+		var alerta int
+		var notificacion int
+		var campo string
+		var valor string
+		err := res.Scan(&id_ale, &alerta, &notificacion, &campo, &valor)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if id != id_ale {
+			id = id_ale
+			alertas = append(alertas, Alerta{Id_ale: id_ale, Alerta: alerta, Notificacion: notificacion, Valores: []string{}, Campos: []string{}})
+		}
+		alertas[len(alertas)-1].Campos = append(alertas[len(alertas)-1].Campos, campo)
+		alertas[len(alertas)-1].Valores = append(alertas[len(alertas)-1].Valores, valor)
+	}
+
+	for i := 0; i < len(alertas); i++ {
+		count1 := len(alertas[i].Campos)
+		count2 := 0
+		for j := 0; j < count1; j++ {
+			if GetCampoPropiedad(db, alertas[i].Campos[j], alertas[i].Valores[j], id_pro) {
+				count2++
+			}
+		}
+		if count1 == count2 {
+			InsertAlert(db, id_pro, alertas[i].Id_ale)
+		} else {
+			DeleteAlert(db, id_pro, alertas[i].Id_ale)
+		}
+	}
+}
+func GetAlertasPagina(db *sql.DB, id_pro int, pagina int) {
+
+	alertas := []Alerta{}
+	id := 0
+
+	cn := 0
+	res, err := db.Query("SELECT t1.id_ale as id_ale, t1.alerta as alerta, t1.notificacion as notificacion, t2.campo as campo, t2.valor as valor FROM alertas t1, alerta_regla t2 WHERE t1.pagina = ? AND t1.id_ale=t2.id_ale AND t1.eliminado = ? AND t2.eliminado = ?", pagina, cn, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_ale int
+		var alerta int
+		var notificacion int
+		var campo string
+		var valor string
+		err := res.Scan(&id_ale, &alerta, &notificacion, &campo, &valor)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if id != id_ale {
+			id = id_ale
+			alertas = append(alertas, Alerta{Id_ale: id_ale, Alerta: alerta, Notificacion: notificacion, Valores: []string{}, Campos: []string{}})
+		}
+		alertas[len(alertas)-1].Campos = append(alertas[len(alertas)-1].Campos, campo)
+		alertas[len(alertas)-1].Valores = append(alertas[len(alertas)-1].Valores, valor)
+	}
+
+	for i := 0; i < len(alertas); i++ {
+		count1 := len(alertas[i].Campos)
+		count2 := 0
+		for j := 0; j < count1; j++ {
+			if GetCampoPropiedad(db, alertas[i].Campos[j], alertas[i].Valores[j], id_pro) {
+				count2++
+			}
+		}
+		if count1 == count2 {
+			InsertAlert(db, id_pro, alertas[i].Id_ale)
+		} else {
+			DeleteAlert(db, id_pro, alertas[i].Id_ale)
+		}
+	}
+}
+func GetCampoPropiedad(db *sql.DB, campo string, valor string, id_pro int) bool {
+
+	res, err := db.Query("SELECT "+campo+" FROM propiedades WHERE id_pro = ?", id_pro)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if res.Next() {
+		var valor2 string
+		err2 := res.Scan(&valor2)
+		if err != nil {
+			log.Fatal(err2)
+		}
+		if valor == valor2 {
+			return true
+		}
+	}
+	return false
+}
+func InsertAlert(db *sql.DB, id_pro int, id_ale int) {
+
+	stmt, err := db.Prepare("INSERT INTO propiedad_alerta (id_pro, id_ale) VALUES (?,?)")
+	ErrorCheck(err)
+	defer stmt.Close()
+	stmt.Exec(id_pro, id_ale)
+}
+func DeleteAlert(db *sql.DB, id_pro int, id_ale int) {
+
+	delForm, err := db.Prepare("DELETE FROM propiedad_alerta WHERE id_pro=? AND id_ale=?")
+	ErrorCheck(err)
+	delForm.Exec(id_pro, id_ale)
+	defer db.Close()
+}
+
+func AddPass1(id_pro int, pagina int) {
+	insert := true
+	for i := 0; i < len(pass.ListaPropAlerts); i++ {
+		if pass.ListaPropAlerts[i].Id_pro == id_pro && pass.ListaPropAlerts[i].Pagina == pagina {
+			insert = false
+		}
+	}
+	if insert {
+		pass.ListaPropAlerts = append(pass.ListaPropAlerts, ListaPropAlert{Id_pro: id_pro, Pagina: pagina})
+	}
+}
+func AddPass2(id_ale int) {
+	insert := true
+	for i := 0; i < len(pass.ListaPropAlerts); i++ {
+		if pass.ListaNewAlerts[i].Id_ale == id_ale {
+			insert = false
+		}
+	}
+	if insert {
+		pass.ListaNewAlerts = append(pass.ListaNewAlerts, ListaNewAlert{Id_ale: id_ale, Tiempo: time.Now()})
+	}
+}
+func RemovePropAlert(s []ListaPropAlert, i int) []ListaPropAlert {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+func RemoveNewAlert(s []ListaNewAlert, i int) []ListaNewAlert {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
-	h.Conf.Tiempo = 200 * time.Second
-	fmt.Println("DAEMON")
+
+	h.Conf.Tiempo = 10 * time.Second
+	fmt.Println("DAEMON X")
+
+	if len(h.ListaPropAlerts) > 0 {
+		GetSimpleAlert(h.ListaPropAlerts[0].Id_pro, h.ListaPropAlerts[0].Pagina)
+		fmt.Println("SE EJECUTO REVISION ALERTA PROPIEDAD ", h.ListaPropAlerts[0].Id_pro)
+		h.ListaPropAlerts = RemovePropAlert(h.ListaPropAlerts, 0)
+	}
+	if len(h.ListaNewAlerts) > 0 {
+		Duration := time.Since(h.ListaNewAlerts[0].Tiempo)
+		if Duration.Minutes() > 10 {
+			GetAllAlert(h.ListaNewAlerts[0].Id_ale)
+			h.ListaNewAlerts = RemoveNewAlert(h.ListaNewAlerts, 0)
+		}
+	}
+
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
@@ -3260,7 +4009,6 @@ func SendEmail(code string) {
 		}
 	}
 }
-
 func SendEmail2() {
 
 	region := "us-east-1"

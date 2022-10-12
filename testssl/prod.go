@@ -17,6 +17,14 @@ type Palabras struct {
 	N string `json:"N"`
 }
 
+type Filtro struct {
+	Nombre  string    `json:"Nombre"`
+	Valores []Valores `json:"Valores"`
+}
+type Valores struct {
+	Nombre string `json:"Nombre"`
+}
+
 func requestHandler(ctx *fasthttp.RequestCtx) {
 
 	if string(ctx.Method()) == "GET" {
@@ -50,6 +58,15 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 			if val == "gr" {
 				gr := [][]string{[]string{"HOLA MUNDO", "妹妹背著 洋娃娃"}, []string{"HOLA MUNDO", "妹妹背著 洋娃娃"}}
 				json.NewEncoder(ctx).Encode(gr)
+			}
+
+		case "/filtro":
+
+			ctx.Response.Header.Set("Content-Type", "application/json")
+			val := string(ctx.QueryArgs().Peek("c"))
+			if val == "1" {
+				zr := []Filtro{Filtro{Nombre: "Marca", Valores: []Valores{Valores{Nombre: "Chevrolet"}, Valores{Nombre: "Audi"}}}, Filtro{Nombre: "Modelo", Valores: []Valores{Valores{Nombre: "Corsa"}, Valores{Nombre: "Astra"}, Valores{Nombre: "A3"}, Valores{Nombre: "A5"}}}}
+				json.NewEncoder(ctx).Encode(zr)
 			}
 
 		default:
