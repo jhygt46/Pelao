@@ -6,6 +6,7 @@
 
     initMap();
 
+   
     google.maps.event.addListener(marker, 'dragend', function (evt) {
         $('#lat').val(evt.latLng.lat().toFixed(6));
         $('#lng').val(evt.latLng.lng().toFixed(6));
@@ -72,6 +73,8 @@
             //map.setZoom(8);
             //map.setCenter(marker.getPosition());
         });
+
+        
 
         //map.controls[google.maps.ControlPosition.TOP_RIGHT].push(card);
 

@@ -74,6 +74,27 @@ body{
     background-repeat: no-repeat;
     cursor: pointer;
 }
+.t4{
+    width: 30px;
+    height: 30px;
+    right: 10px;
+    background-image: url("../img/icons-set.png");
+    background-position: -176px -190px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+.t5{
+    width: 16px;
+    height: 16px;
+    right: 8px;
+    border-radius: 8px;
+    background-color: rgba(238, 238, 238, 0.75);
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+}
 .va{
     position: absolute;
     top: 50%;
@@ -88,6 +109,92 @@ body{
     z-index: 2;
     padding-top: 50px;
     overflow-y: auto;
+}
+.cart{
+    position: fixed;
+    width: 300px;
+    height: 100%;
+    top: 0px;
+    right: -301px;
+    z-index: 2;
+    background: #eee;
+    border-left: 1px solid #666;
+}
+.cart .cont_cart {
+    padding: 60px 10px 30px 10px;
+}
+.cart .titulo_cart{
+    padding-bottom: 10px;
+}
+.cart .data_cart{
+    background: #ddd;
+    height: calc(100% - 175px);
+    overflow-y: auto;
+}
+.cart .data_cart .list_cart{
+
+}
+.cart .data_cart .list_cart .cart_item{
+    padding-top: 4px;
+    border-bottom: 1px solid #aaa;
+}
+.cart .data_cart .list_cart .cart_item .cartnombre{
+    width: 240px;
+    float: left;
+    margin-left: 5px;
+}
+.cart .data_cart .list_cart .cart_item .cartnombre .cn1{
+    font-size: 14px;
+}
+.cart .data_cart .list_cart .cart_item .cartnombre .cn2{
+    font-size: 16px;
+    font-weight: bold;
+}
+.cart .data_cart .list_cart .cart_item .cartaccion{
+    width: 30px;
+    height: 30px;
+    float: left;
+    background-image: url("../img/icons-set.png");
+    background-position: -772px -46px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    margin-right: 5px;
+    margin-top: 5px;
+}
+.cart .accion_cart{
+    height: 35px;
+    padding-top: 10px;
+    text-align: center;
+}
+
+.cart .accion_cart .cart_enviar {
+   background-color: #666;
+   color: #fff;
+   font-size: 16px;
+   padding: 5px 0px;
+   width: 160px;
+   margin: 0 auto;
+}
+
+.cart .titulo_cart :nth-child(1){
+    float: left;
+    width: 30px;
+    height: 30px;
+    background-image: url("../img/icons-set.png");
+    background-position: -537px -334px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+.cart .titulo_cart :nth-child(2){
+    width: 220px;
+    text-align: center;
+    float: left;
+    font-size: 20px;
+}
+.cart .titulo_cart :nth-child(3){
+    float: left;
+    width: 30px;
+    height: 30px;
 }
 .l1{
     position: relative;
@@ -332,6 +439,9 @@ body{
 .h .i .fc .lu{
     padding-top: 10px;
 }
+.h .i .fc .lu .contlu{
+    display: none;
+}
 .h .i .fc .lu .u{
     background: #d6d6d6;
     padding: 8px 5px;
@@ -368,7 +478,107 @@ body{
 .h .i .fc .lu .u .btns .mdl{
     background-position: -173px -383px;
 }
+.h .i .fc .lu .u .btns .car{
+    background-position: -174px -190px;
+}
+.h .i .fc .lu .u .btns .mas{
+    background-position: -174px -334px;
+}
+.h .i .fc .lu .u .btns .menos{
+    background-position: -234px -334px;
+}
 
+.PropBtns{
+    margin-bottom: 10px;
+}
+.PropBtns .PropBtn{
+    float: left;
+    width: 10.8%;
+    min-width: 80px;
+    background: #999;
+    text-align: center;
+    color: #fff;
+    margin-right: 0.31%;
+    margin-top: 4px;
+    cursor: pointer;
+    padding: 2px 0px;
+}
+.buscarProp{
+    display: block;
+}
+.buscarProp .PropMap{
+    width: 70%;
+    float: left;
+    height: 400px;
+}
+.buscarProp .PropForm{
+    width: 30%;
+    float: left;
+    overflow-y: auto;
+}
+.buscarProp .PropForm .pfl{
+    padding-left: 5px;
+    overflow-y: auto;
+    height: 400px;
+}
+.buscarProp .PropForm .pfl .pfl_titulo{
+    background: #c0c0c0;
+    padding: 3px 6px;
+}
+.ListCheckP{
+    padding: 4px 0px;
+}
+.lcpt{
+    font-size: 12px;
+    line-height: 8px;
+    padding: 4px 0px 0px 4px;
+}
+.cfl{
+    
+}
+.cfl .cflnom{
+    background: #ccc;
+    padding: 1px 0px 1px 5px;
+    padding-bottom: 1px solid #bbb;
+}
+.cfl .cflops{
+    background: #eee;
+    padding: 4px 2px;
+}
+.cfl .cflops .vmm{
+    float: left;
+    width: 48%;
+    height: 25px;
+    margin: 0px 1%;
+}
+.SePropCheck{
+    
+}
+.SePropCheck input{
+    width: 20px !important;
+    float: left;
+    margin-top: 4px !important;
+}
+.SePropCheck .nomcheck{
+    width: calc(100% - 20px);
+    float: left;
+}
+.tb0{
+    padding: 3px 0px 3px 5px;
+    background: #d9d9d9;
+}
+.tb1{
+    padding: 3px 0px 3px 5px;
+    background: #d0d0d0;
+}
+.tb2{
+    padding: 3px 0px 3px 5px;
+    background: #c9c9c9;
+}
+.tb3{
+    padding: 3px 0px 3px 5px;
+    background: #c0c0c0;
+}
 .basic-grey {
     margin-left: 0px;
     padding: 15px 15px 15px 10px;
@@ -535,3 +745,25 @@ body{
     height:100px;
 }
 
+@media only screen and (min-width: 600px) {
+    .col1{
+        margin-top: 10px;
+        width: 33.33%;
+        float: left;
+    }
+}
+@media only screen and (min-width: 430px) and (max-width: 600px) {
+    .col1{
+        margin-top: 10px;
+        width: 50%;
+        float: left; 
+    }
+}
+@media only screen and (max-width: 430px) {
+    .col1{
+        margin-top: 10px;
+        width: 100%;
+        float: left; 
+    }
+}
+.highcharts-button, .highcharts-legend, .highcharts-container > svg > text {display: none;}

@@ -1,10 +1,95 @@
-<div style="width:100%; height:250px;background: #fff;">
-{{.Nombre}}
-{{.Precio}}
-{{.UF}}
+<div class="mt">
+    <h1>{{.Nombre}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r2" title="Datos Municipales" onclick='navlink("")'></a>
+    </ul>
 </div>
-<div style="width:100%; height:250px;background: #fff; margin-top: 10px;"></div>
-<!--
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>Resumen</h1>
+            <h2>Estadisticas y Precios</h2>
+        </div>
+        <div class="init clearfix" style="margin-top: 10px">
+            <div id="container" class="col1"></div>
+            <div id="container2" class="col1" style="background: #EEE;"></div>
+            <div class="col1" style="background: #DDD;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>Resumen</h1>
+            <h2>Estadisticas y Precios</h2>
+        </div>
+        <ul class='lu'>
+            {{ range $idPro, $Pro := .Resp.Prods }}
+            <li class="u">                
+                <div class="no">{{$Pro.Nombre}}</div>
+                <div class="btns clearfix valign">
+                    <a title="Modificar" class="icn mas lpb-{{$idPro}}" onclick="ToogleInfo(0, {{$idPro}})"></a>
+                </div>
+            </li>
+            <div class="contlu lp-{{$idPro}}">
+                {{ range $Pro.Lista }}
+                <li class="u">
+                    <div class="no">{{.Nombre}}</div>
+                    <div class="btns clearfix valign">
+                        <a title="Modificar" class="icn car" onclick="AddCart({{.Id}},{{$idPro}})"></a>
+                    </div>
+                </li>
+                {{ end }}
+            </div>
+            {{end}}
+        </ul>
+    </div>
+</div>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>Resumen</h1>
+            <h2>Estadisticas y Precios</h2>
+        </div>
+        <ul class='lu'>
+            {{ range $idAle, $Ale := .Resp.Alertas }}
+            <li class="u" rel="{{$idAle}}">                
+                <div class="no">{{$Ale.Nombre}}</div>
+                <div class="btns clearfix valign">
+                    <a title="Modificar" class="icn mas lab-{{$idAle}}" onclick="ToogleInfo(1, {{$idAle}})"></a>
+                </div>
+            </li>
+            <div class="contlu la-{{$idAle}}">
+                {{ range $Ale.Lista }}
+                <li class="u">
+                    <div class="no">{{.Nombre}}</div>
+                    <div class="btns clearfix valign">
+                        <a title="Modificar" class="icn car" onclick="AddCart({{$idAle}},{{.Id}})"></a>
+                    </div>
+                </li>
+                {{ end }}
+            </div>
+            {{end}}
+        </ul>
+    </div>
+</div>
+
+
+
+<div style="width:100%;background: #fff;">
+<div>Nombre: {{.Nombre}}</div>
+<div>Precio: {{.Precio}}</div>
+<div>UF: {{.UF}}</div>
+<div>Total Notificaciones: {{.Resp.TotalNotificaciones}}</div>
+<div>Total Alertas: {{.Resp.TotalAlertas}}</div>
+</div>
+
+
+
+
+
 <script>
 
     initMap();
@@ -29,65 +114,53 @@
     }
 
     Highcharts.chart('container', {
-        title: { text: 'Solar Employment Growth by Sector, 2010-2016' },
-        subtitle: { text: 'Source: thesolarfoundation.com' },
-        yAxis: {
-            title: { text: 'Number of Employees' }
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: 0,
+            plotShadow: false,
+            backgroundColor: 'rgba(0,0,0,0)',
+            type: 'pie',
+            height: 200,
+            margin: [0, 0, 0, 0]
         },
-        xAxis: {
-            accessibility: {
-                rangeDescription: 'Range: 2010 to 2017'
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        accessibility: {
+            point: {
+                valueSuffix: '%'
             }
         },
-        legend: {
-            layout: 'vertical',
-            align: 'right',
-            verticalAlign: 'middle'
-        },
         plotOptions: {
-            series: {
-                label: { connectorAllowed: false },
-                pointStart: 2010
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                colors: ["#666666", "#888888", "#aaaaaa"],
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>',
+                    distance: -10,
+                    filter: {
+                        property: 'percentage',
+                        operator: '>',
+                        value: 4
+                    }
+                }
             }
         },
         series: [{
-            name: 'Installation',
-            data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
-        }, {
-            name: 'Manufacturing',
-            data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
-        }, {
-            name: 'Sales & Distribution',
-            data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
-        }, {
-            name: 'Project Development',
-            data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
-        }, {
-            name: 'Other',
-            data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
-        }],
-        responsive: {
-            rules: [{
-                condition: {
-                    maxWidth: 500
-                },
-                chartOptions: {
-                    legend: {
-                        layout: 'horizontal',
-                        align: 'center',
-                        verticalAlign: 'bottom'
-                    }
-                }
-            }]
-        }
-
+            name: 'Share',
+            data: [
+                { name: 'Completado', y: 75.0 },
+                { name: 'Alerta', y: 15.0 },
+                { name: 'Notificacion', y: 10.0 },
+            ]
+        }]
     });
+    
 </script>
 <div>
-    <div></div>
-    <div id="container" style="width:100%; height:400px;"></div>
     <div id="map" style="width:100%; height:400px;"></div>
     <div id="lat">LAT</div>
     <div id="lng">LNG</div>
 </div>
--->

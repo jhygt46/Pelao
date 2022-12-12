@@ -1,0 +1,27 @@
+{{if .Lista}}
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign">
+                <li class="back" onclick="backurl()"></li>
+                <li class="back" onclick="backurl()"></li>
+            </ul>
+        </div>
+        <ul class='lu'>
+            {{range .Lista}}
+            <li class="u" rel="{{.Id}}">                
+                <div class="no">Cotizacion #{{.Id}} {{.Nombre}}</div>
+                <div class="btns clearfix valign">
+                    <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', {{.Id}}, '{{$.DelObj}}', '{{.Nombre}}')"></a>
+                    <a title="Modificar" class="icn car" onclick="getCotizacion({{.Id}}, 1)"></a>
+                </div>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+</div>
+{{end}}
+<br />
+<br />

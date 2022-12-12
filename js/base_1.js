@@ -1,15 +1,205 @@
+var cartvisible = 0;
+var BuscarPropConf = {};
 $(document).ready(function(){
 
     $('.conthtml').css('min-height', $(document).height());
     //size(0);
     localStorage.setItem("history", null);
+    if(id_cotizacion > 0){
+        getCotizacion(id_cotizacion, 0);
+    }
    
 });
-
+function in_array(arr, id){
+    var len = arr.length;
+    if (len > 0){
+        for(var i=0; i<len; i++){
+            if(arr[i].id == id){
+                return false;
+            }
+        }
+    }else{
+        return true;
+    }
+    return true;
+}
+function in_array2(arr, id){
+    var len = arr.length;
+    if (len > 0){
+        for(var i=0; i<len; i++){
+            if(arr[i] == id){
+                return false;
+            }
+        }
+    }else{
+        return true;
+    }
+    return true;
+}
 $(window).resize(function() {
     //size(1);
 });
+function showFrom(num){
+    for(var i=0; i<=8; i++){
+        $(".Prop-"+i).hide();
+    }
+    $(".Prop-"+num).show();
+}
+function show_cart(){
+    if (cartvisible == 0){
+        cartvisible = 1;
+        cartmostrar();
+    }else{
+        cartvisible = 0;
+        cartesconder();
+    }
+}
+function ToogleInfo(tipo, id){
 
+    if(tipo == 0){
+        if($(".lp-"+id).is(":visible")){
+            $(".lp-"+id).hide(500);
+            $(".lpb-"+id).addClass("mas");
+            $(".lpb-"+id).removeClass("menos");
+        }else{
+            $(".lp-"+id).show(500);
+            $(".lpb-"+id).addClass("menos");
+            $(".lpb-"+id).removeClass("mas");
+        }
+    }
+    if(tipo == 1){
+        if($(".la-"+id).is(":visible")){
+            $(".la-"+id).hide(500);
+            $(".lab-"+id).addClass("mas");
+            $(".lab-"+id).removeClass("menos");
+        }else{
+            $(".la-"+id).show(500);
+            $(".lab-"+id).addClass("menos");
+            $(".lab-"+id).removeClass("mas");
+        }
+    }
+
+}
+function renderCotizacion(data){
+
+    $(".list_cart").html("");
+    if(data.Op == 1){
+        $(".t5").html(data.Lista.length);
+        for(var i=0; i<data.Lista.length; i++){
+            $(".list_cart").append("<div class='cart_item clearfix'><div class='cartnombre'><div class='cn1'>"+data.Lista[i].Propiedad+"</div><div class='cn2'>"+data.Lista[i].NombreAle+"</div></div><div onclick='rmCart("+data.Lista[i].IdAle+","+data.Lista[i].IdPro+","+data.IdCot+")' class='cartaccion'></div></div>"); 
+        }
+    }else{
+        $(".t5").html("0");
+    }
+
+}
+function getZoom(diff){
+
+    if(diff < 0.03775){
+        return 14;
+    }else if(diff < 0.074658){
+        return 13;
+    }else if(diff < 0.149502){
+        return 12;
+    }else if(diff < 0.295757){
+        return 11;
+    }else if(diff < 0.592388){
+        return 10;
+    }else if(diff < 1.166424){
+        return 9;
+    }else if(diff < 2.385906){
+        return 8;
+    }else if(diff < 4.780926){
+        return 7;
+    }else if(diff < 9.52702){
+        return 6;
+    }else if(diff < 18.887371){
+        return 5;
+    }else if(diff < 37.695965){
+        return 4;
+    }else if(diff < 75.664715){
+        return 3;
+    }else if(diff < 153.71159){
+        return 2;
+    }else{
+        return 1;
+    }
+}
+function getCotizacion(id_cot, n){
+    var send = {id_cot: id_cot, accion: "get"};
+    $.ajax({
+        url: "cart/",
+        type: "POST",
+        data: send,
+        success: function(data){
+            if(n == 1){
+                cartvisible = 1;
+                cartmostrar();
+            }
+            renderCotizacion(data)
+        }, error: function(e){
+            console.log(e);
+        }
+    });
+}
+function rmCart(id_ale, id_pro, id_cot){
+    var send = {id_ale: id_ale, id_pro: id_pro, id_cot: id_cot, accion: "rm"};
+    $.ajax({
+        url: "cart/",
+        type: "POST",
+        data: send,
+        success: function(data){
+            renderCotizacion(data)
+        }, error: function(e){
+            console.log(e);
+        }
+    });
+}
+function SendCart(id_ale, id_pro, id_cot){
+    var send = {id_ale: id_ale, id_pro: id_pro, id_cot: id_cot, accion: "add"};
+    $.ajax({
+        url: "cart/",
+        type: "POST",
+        data: send,
+        success: function(data){
+            cartvisible = 1;
+            cartmostrar();
+            renderCotizacion(data)
+        }, error: function(e){
+            console.log(e);
+        }
+    });
+}
+function AddCart(id_ale, id_pro){
+
+    if(id_cotizacion > 0){
+        swal({   
+            title: "Cotizacion",   
+            text: "Desea crear una nueva cotizacion o ocupar la existente",   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonColor: "#DD6B55",   
+            confirmButtonText: "Nueva",   
+            closeOnConfirm: true,
+            showLoaderOnConfirm: false
+        }, function(isConfirm){
+            if(isConfirm){ 
+                SendCart(id_ale, id_pro, 0);
+            }else{ 
+                SendCart(id_ale, id_pro, id_cotizacion);
+            }
+        });
+    }else{
+        SendCart(id_ale, id_pro, 0);
+    }
+
+}
+function cartmostrar(){
+    $('.cart').animate({ right: 0 }, 500);
+}
+function cartesconder(){
+    $('.cart').animate({ right: -301 }, 500);
+}
 function topscroll(){
     $('html, body').animate({ scrollTop: 0 }, 500);
 }
@@ -147,7 +337,6 @@ function confirm(message){
 function openwn(url, w, h){
     var myWindow = window.open(url, "_blank", "width="+w+",height="+h);
 }
-
 function fm(that){
     
     var inputs = new Array();
