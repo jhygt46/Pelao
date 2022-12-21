@@ -1,0 +1,138 @@
+
+<script>
+
+    document.getElementById('contrato_arriendo').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('contrato_arriendo')[0].style.display = "block"
+            document.getElementsByClassName('contrato_arriendo')[1].style.display = "block"
+            document.getElementsByClassName('contrato_arriendo')[2].style.display = "block"
+            document.getElementsByClassName('contrato_arriendo')[3].style.display = "block"
+        }else{
+            document.getElementsByClassName('contrato_arriendo')[0].style.display = "none"
+            document.getElementsByClassName('contrato_arriendo')[1].style.display = "none"
+            document.getElementsByClassName('contrato_arriendo')[2].style.display = "none"
+            document.getElementsByClassName('contrato_arriendo')[3].style.display = "none"
+        }
+    })
+    document.getElementById('contrato_subarriendo').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('contrato_subarriendo')[0].style.display = "block"
+            document.getElementsByClassName('contrato_subarriendo')[1].style.display = "block"
+            document.getElementsByClassName('contrato_subarriendo')[2].style.display = "block"
+            document.getElementsByClassName('contrato_subarriendo')[3].style.display = "block"
+        }else{
+            document.getElementsByClassName('contrato_subarriendo')[0].style.display = "none"
+            document.getElementsByClassName('contrato_subarriendo')[1].style.display = "none"
+            document.getElementsByClassName('contrato_subarriendo')[2].style.display = "none"
+            document.getElementsByClassName('contrato_subarriendo')[3].style.display = "none"
+        }
+    })
+
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Situación Técnica" onclick='navlink("/pages/crearPropiedad3?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Situación Legal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <!--
+            <ul class="clearfix valign">
+                <li class="back" onclick="backurl()"></li>
+                <li class="back" onclick="backurl()"></li>
+            </ul>
+            -->
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Tasacion Valor Comercial:</span>
+                    <input id="tasacion_valor_comercial" type="text" value="{{.TasacionValorComercial}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Año Tasacion:</span>
+                    <input id="ano_tasacion" type="number" min="1960" max="2030" step="1" value="{{.AnoTasacion}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Posee Contrato de Arriendo:</span>
+                    <select id="contrato_arriendo">
+                        <option value="0" {{if eq .ContratoArriendo 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .ContratoArriendo 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .ContratoArriendo 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_arriendo" {{if eq .ContratoArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Valor Arriendo en Pesos:</span>
+                    <input id="valor_arriendo" type="text" value="{{.ValorArriendo}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_arriendo" {{if eq .ContratoArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_arriendo" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_arriendo" {{if eq .ContratoArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Vencimiento:</span>
+                    <input id="vencimiento_arriendo" type="date" value="{{.VencimientoArriendo}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_arriendo" {{if eq .ContratoArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Renovacion Automatica:</span>
+                    <select id="renovacion_automatica">
+                        <option value="0" {{if eq .RenovacionAutomatica 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .RenovacionAutomatica 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .RenovacionAutomatica 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Posee Contrato de Subarriendo:</span>
+                    <select id="contrato_subarriendo">
+                        <option value="0" {{if eq .ContratoSubArriendo 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .ContratoSubArriendo 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .ContratoSubArriendo 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_subarriendo" {{if eq .ContratoSubArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Valor Arriendo en Pesos:</span>
+                    <input id="valor_subarriendo" type="text" value="{{.ValorSubArriendo}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_subarriendo" {{if eq .ContratoSubArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_subarriendo" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_subarriendo" {{if eq .ContratoSubArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Vencimiento:</span>
+                    <input id="vencimiento_subarriendo" type="date" value="{{.VencimientoSubArriendo}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="contrato_subarriendo" {{if eq .ContratoSubArriendo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Renovacion Automatica:</span>
+                    <select id="renovacion_automaticasub">
+                        <option value="0" {{if eq .RenovacionAutomaticaSub 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .RenovacionAutomaticaSub 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .RenovacionAutomaticaSub 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
