@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"image/color"
 	"io"
 	"io/ioutil"
 	"log"
@@ -33,6 +34,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+
+	qrcode "github.com/skip2/go-qrcode"
+
+	col "github.com/johnfercher/maroto/pkg/color"
+	"github.com/johnfercher/maroto/pkg/consts"
+	"github.com/johnfercher/maroto/pkg/pdf"
+	"github.com/johnfercher/maroto/pkg/props"
 )
 
 type Response struct {
@@ -106,7 +114,9 @@ type TemplateConf struct {
 	PageMod            string  `json:"PageMod"`
 	DelAccion          string  `json:"DelAccion"`
 	DelObj             string  `json:"DelObj"`
-	Lista              []Lista `json:"FormDescripcion"`
+	Lista              []Lista `json:"Lista"`
+	Lista2             []Lista `json:"Lista2"`
+	Lista3             []Lista `json:"Lista3"`
 	Dominio            int     `json:"Dominio"`
 	Dominio2           int     `json:"Dominio2"`
 	AtencionPublico    int     `json:"AtencionPublico"`
@@ -193,6 +203,7 @@ type TemplateConf struct {
 
 	ValorCampo string `json:"ValorCampo"`
 	FormIdAle  int    `json:"FormIdAle"`
+	PrecioUf   int    `json:"PrecioUf"`
 
 	P0 bool `json:"P0"`
 	P1 bool `json:"P1"`
@@ -366,6 +377,33 @@ type Propiedad struct {
 	Atencion_publico int     `json:"Atencion_publico"`
 	Copropiedad      int     `json:"Copropiedad"`
 	Destino          int     `json:"Destino"`
+	Sup_terreno      int     `json:"Sup_terreno"`
+	Sup_edificada    int     `json:"Sup_edificada"`
+	Sup_edificada_sn int     `json:"Sup_edificada_sn"`
+	Sup_edificada_bn int     `json:"Sup_edificada_bn"`
+	Cant_pisos       int     `json:"Cant_pisos"`
+
+	Electrico_te1        int `json:"Electrico_te1"`
+	Dotacion_ap          int `json:"Dotacion_ap"`
+	Dotacion_alcance     int `json:"Dotacion_alcance"`
+	Instalacion_ascensor int `json:"Instalacion_ascensor"`
+	Te1_ascensor         int `json:"Te1_ascensor"`
+	Certificado_ascensor int `json:"Certificado_ascensor"`
+	Clima                int `json:"Clima"`
+	Seguridad_incendio   int `json:"Seguridad_incendio"`
+
+	Fiscal_serie   int `json:"Fiscal_serie"`
+	Fiscal_destino int `json:"Fiscal_destino"`
+	Fiscal_exento  int `json:"Fiscal_exento"`
+
+	Valor_terreno               int `json:"Valor_terreno"`
+	Valor_edificacion           int `json:"Valor_edificacion"`
+	Valor_obras_complementarias int `json:"Valor_obras_complementarias"`
+	Valor_total                 int `json:"Valor_total"`
+
+	Cert_info_previas int `json:"Cert_info_previas"`
+	Tipo_instrumento  int `json:"Tipo_instrumento"`
+	Normativo_destino int `json:"Normativo_destino"`
 }
 type Pais struct {
 	Id_pai int    `json:"Id_pai"`
@@ -495,6 +533,7 @@ func main() {
 		r.POST("/save", Save)
 		r.POST("/delete", Delete)
 		r.GET("/salir", Salir)
+		r.GET("/cotizacion/{name}", Cotizacionfunc)
 		r.GET("/SetEmpresa/{name}", SetEmpresa)
 
 		// ANTES
@@ -794,6 +833,30 @@ func Save(ctx *fasthttp.RequestCtx) {
 		if id > 0 {
 			resp = UpdateUsuario(db, token, id, nombre, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 		}
+	case "guardar_detalle_cotizacion":
+
+		descripcion := string(ctx.FormValue("descripcion"))
+		precio := string(ctx.FormValue("precio"))
+		insmod := string(ctx.FormValue("insmod"))
+		id_pro := Read_uint32bytes(ctx.FormValue("id_pro"))
+		id_ale := Read_uint32bytes(ctx.FormValue("id_ale"))
+		if insmod == "0" {
+			resp = InsertDetalleCotizacion(db, token, id, descripcion, precio, id_pro, id_ale)
+		} else {
+			resp = UpdateDetalleCotizacion(db, token, id, descripcion, precio, id_pro, id_ale)
+		}
+
+	case "guardar_admin_cotizacion":
+
+		id_emp := Read_uint32bytes(ctx.FormValue("id_emp"))
+		uf := string(ctx.FormValue("precio"))
+
+		if id == 0 {
+			resp = InsertCotizacion(db, token, uf, id_emp)
+		}
+		if id > 0 {
+			resp = UpdateCotizacion(db, token, id, uf, id_emp)
+		}
 
 	default:
 
@@ -869,6 +932,9 @@ func Delete(ctx *fasthttp.RequestCtx) {
 	case "borrar_cotizacion":
 		id := Read_uint32bytes(ctx.FormValue("id"))
 		resp = BorrarCotizacion(db, token, id)
+	case "borrar_cotizacion_admin":
+		id := Read_uint32bytes(ctx.FormValue("id"))
+		resp = BorrarCotizacionAdmin(db, token, id)
 	default:
 
 	}
@@ -1019,6 +1085,313 @@ func Nueva(ctx *fasthttp.RequestCtx) {
 	}
 
 	json.NewEncoder(ctx).Encode(resp)
+}
+func Cotizacionfunc(ctx *fasthttp.RequestCtx) {
+
+	ctx.SetContentType("application/pdf")
+	//token := string(ctx.Request.Header.Cookie("cu"))
+
+	name := ctx.UserValue("name")
+	str, ok := name.(string)
+	if ok {
+
+		aux := strings.Split(str, "_")
+		if len(aux) == 2 {
+			aux2 := strings.Split(aux[1], ".")
+			if len(aux2) == 2 {
+
+				id, ers := strconv.Atoi(aux2[0])
+				ErrorCheck(ers)
+				datosCot := DatosCotizacion(id)
+
+				b, qrfile := CreateQr(id)
+				if b {
+
+					titulo := fmt.Sprintf("Cotizacion #%v", id)
+
+					darkGrayColor := col.Color{Red: 55, Green: 55, Blue: 55}
+					grayColor := col.Color{Red: 220, Green: 220, Blue: 220}
+					//grayColor2 := col.Color{Red: 200, Green: 200, Blue: 200}
+					whiteColor := col.NewWhite()
+
+					m := pdf.NewMaroto(consts.Portrait, consts.A4)
+					m.SetPageMargins(10, 10, 10)
+
+					m.RegisterHeader(func() {
+						m.Row(20, func() {
+							m.Col(3, func() {
+								_ = m.FileImage("./logo.png", props.Rect{
+									Center:  true,
+									Percent: 100,
+								})
+							})
+
+							m.Col(6, func() {
+								m.Text(titulo, props.Text{
+									Top:   6,
+									Size:  18,
+									Style: consts.Bold,
+									Align: consts.Center,
+								})
+							})
+
+							m.Col(3, func() {
+								_ = m.FileImage(qrfile, props.Rect{
+									Center:  true,
+									Percent: 100,
+								})
+							})
+						})
+					})
+					m.RegisterFooter(func() {
+						m.Row(4, func() {
+							m.Col(12, func() {
+								m.Text("Esta cotización tiene un vigencia de 30 días", props.Text{
+									Top:   16,
+									Style: consts.BoldItalic,
+									Size:  10,
+									Align: consts.Center,
+									Color: darkGrayColor,
+								})
+							})
+						})
+					})
+
+					m.Row(8, func() {})
+
+					m.Row(5, func() {
+						m.ColSpace(1)
+						m.Col(2, func() {
+							m.Text("Empresa: ", props.Text{
+								Top:   1.5,
+								Size:  9,
+								Style: consts.Bold,
+								Align: consts.Left,
+								Color: darkGrayColor,
+							})
+						})
+						m.Col(9, func() {
+							m.Text(datosCot.NombreEmp, props.Text{
+								Top:   1.5,
+								Size:  9,
+								Style: consts.Bold,
+								Align: consts.Left,
+								Color: darkGrayColor,
+							})
+						})
+					})
+					m.Row(5, func() {
+						m.ColSpace(1)
+						m.Col(2, func() {
+							m.Text("Fecha: ", props.Text{
+								Top:   1.5,
+								Size:  9,
+								Style: consts.Bold,
+								Align: consts.Left,
+								Color: darkGrayColor,
+							})
+						})
+						m.Col(9, func() {
+							m.Text(datosCot.Fecha, props.Text{
+								Top:   1.5,
+								Size:  9,
+								Style: consts.Bold,
+								Align: consts.Left,
+								Color: darkGrayColor,
+							})
+						})
+					})
+
+					m.Row(8, func() {})
+
+					m.SetBackgroundColor(darkGrayColor)
+					m.Row(7, func() {
+						m.ColSpace(1)
+						m.Col(9, func() {
+							m.Text("Lista Servicios", props.Text{
+								Top:   1.5,
+								Size:  9,
+								Style: consts.Bold,
+								Align: consts.Left,
+								Color: col.NewWhite(),
+							})
+						})
+						m.Col(2, func() {
+							m.Text("Precio UF", props.Text{
+								Top:   1.5,
+								Size:  9,
+								Style: consts.Bold,
+								Align: consts.Left,
+								Color: col.NewWhite(),
+							})
+						})
+					})
+					m.SetBackgroundColor(col.Color{Red: 245, Green: 245, Blue: 245})
+					m.Row(1, func() {})
+
+					for i := 0; i < len(datosCot.Lista); i++ {
+
+						m.SetBackgroundColor(grayColor)
+						m.Row(6, func() {
+							m.ColSpace(1)
+							m.Col(9, func() {
+								m.Text(datosCot.Lista[i].NombreAle, props.Text{
+									Top:   2.0,
+									Size:  9,
+									Style: consts.Bold,
+									Align: consts.Left,
+								})
+							})
+							m.Col(2, func() {
+								m.Text(fmt.Sprintf("%v", datosCot.Lista[i].Precio), props.Text{
+									Top:   1.5,
+									Size:  9,
+									Style: consts.Bold,
+									Align: consts.Left,
+								})
+							})
+						})
+						m.Row(4, func() {
+							m.ColSpace(1)
+							m.Col(9, func() {
+								m.Text(datosCot.Lista[i].Propiedad, props.Text{
+									Top:   0.2,
+									Size:  7,
+									Style: consts.Bold,
+									Align: consts.Left,
+								})
+							})
+							m.ColSpace(2)
+						})
+						m.Row(16, func() {
+							m.ColSpace(1)
+							m.Col(8, func() {
+								m.Text(datosCot.Lista[i].Descripcion, props.Text{
+									Top:   1.2,
+									Size:  8,
+									Style: consts.Bold,
+									Align: consts.Left,
+								})
+							})
+							m.ColSpace(3)
+						})
+
+						m.SetBackgroundColor(col.Color{Red: 235, Green: 235, Blue: 235})
+						m.Row(1, func() {})
+					}
+
+					m.SetBackgroundColor(whiteColor)
+
+					m.Row(8, func() {})
+					m.Row(5, func() {
+						m.ColSpace(7)
+						m.Col(2, func() {
+							m.Text("Total UF:", props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Right,
+							})
+						})
+						m.Col(3, func() {
+							m.Text(fmt.Sprintf("%v", datosCot.TotalUf), props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Center,
+							})
+						})
+					})
+					m.Row(5, func() {
+						m.ColSpace(7)
+						m.Col(2, func() {
+							m.Text("Valor UF:", props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Right,
+							})
+						})
+						m.Col(3, func() {
+							m.Text(SeparadordeMiles(int(datosCot.Uf)), props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Center,
+							})
+						})
+					})
+					m.Row(5, func() {
+						m.ColSpace(7)
+						m.Col(2, func() {
+							m.Text("Subtotal:", props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Right,
+							})
+						})
+						m.Col(3, func() {
+							m.Text(SeparadordeMiles(int(datosCot.Subtotal)), props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Center,
+							})
+						})
+					})
+					m.Row(5, func() {
+						m.ColSpace(7)
+						m.Col(2, func() {
+							m.Text("Iva 19%:", props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Right,
+							})
+						})
+						m.Col(3, func() {
+							m.Text(SeparadordeMiles(int(datosCot.Iva)), props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Center,
+							})
+						})
+					})
+					m.Row(5, func() {
+						m.ColSpace(7)
+						m.Col(2, func() {
+							m.Text("Total:", props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Right,
+							})
+						})
+						m.Col(3, func() {
+							m.Text(SeparadordeMiles(int(datosCot.Total)), props.Text{
+								Top:   0,
+								Style: consts.Bold,
+								Size:  9,
+								Align: consts.Center,
+							})
+						})
+					})
+
+					pdf, err := m.Output()
+
+					if err != nil {
+						ErrorCheck(err)
+						return
+					} else {
+						ctx.SetBody(pdf.Bytes())
+					}
+
+				}
+			}
+		}
+	}
 }
 func Pages(ctx *fasthttp.RequestCtx) {
 
@@ -1214,6 +1587,95 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			} else {
 				obj.FormId = 0
 			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+	case "AdminCotizacion":
+
+		if SuperAdmin(token) {
+
+			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
+
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Mis Cotizaciones", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "guardar_admin_cotizacion", fmt.Sprintf("/pages/%s", name), "borrar_cotizacion_admin", "Cotizacion")
+			obj.Lista = GetAllListaCotizaciones()
+			emps, found := GetEmpresas()
+			if found {
+				obj.Lista2 = emps
+			}
+
+			if id > 0 {
+				obj.FormIdRec, obj.PrecioUf = GetCotizacion(id)
+				obj.FormId = id
+			} else {
+				obj.FormId = 0
+				obj.PrecioUf = GetUF()
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+	case "confCotizacion":
+
+		if SuperAdmin(token) {
+
+			id_cot := Read_uint32bytes(ctx.QueryArgs().Peek("id_cot"))
+
+			id_ale := Read_uint32bytes(ctx.QueryArgs().Peek("id_ale"))
+			id_pro := Read_uint32bytes(ctx.QueryArgs().Peek("id_pro"))
+
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			lista, id_emp, nombreemp := GetAlertasCotizaciones(id_cot)
+
+			obj := GetTemplateConf("Cotizacion", fmt.Sprintf("Cotizacion #%v", id_cot), nombreemp, "Titulo Usuarios", "guardar_detalle_cotizacion", fmt.Sprintf("/pages/%s", name), "borrar_detalle_cotizacion", "Cotizacion")
+
+			obj.Lista = lista
+			obj.FormId = id_cot
+
+			fmt.Println(id_emp)
+			listaP, found := GetPropiedades(id_emp)
+			if found {
+				obj.Lista2 = listaP
+			}
+
+			listaA, found2 := GetAlertas()
+			if found2 {
+				obj.Lista3 = listaA
+			}
+
+			obj.FormIdAle = id_ale
+			obj.FormIdRec = id_pro
+
+			if id_ale > 0 && id_pro > 0 {
+
+				obj.Descripcion, obj.FormPrecio = GetDetalleCotizacion(id_cot, id_ale, id_pro)
+				obj.Valor = 1
+
+			}
+
+			err = t.Execute(ctx, obj)
+			ErrorCheck(err)
+
+		}
+	case "envCotizacion":
+
+		if SuperAdmin(token) {
+
+			id_cot := Read_uint32bytes(ctx.QueryArgs().Peek("id_cot"))
+
+			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			ErrorCheck(err)
+
+			obj := GetTemplateConf("Mis Cotizaciones", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "", fmt.Sprintf("/pages/%s", name), "borrar_cotizacion", "Cotizacion")
+
+			obj.Lista, obj.FormId = GetUserFromCot(id_cot)
 
 			err = t.Execute(ctx, obj)
 			ErrorCheck(err)
@@ -1587,7 +2049,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			//obj.Lista = []Lista{Lista{Id: 1, Nombre: "HOLA"}}
 
-			fmt.Println(obj)
+			//fmt.Println(obj)
 
 			err = t.Execute(ctx, obj)
 			ErrorCheck(err)
@@ -1731,6 +2193,33 @@ func GetMySQLDB() (db *sql.DB, err error) {
 	return
 	//CREATE DATABASE pelao CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
 }
+func GetUserFromCot(id int) ([]Lista, int) {
+
+	lista := []Lista{}
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	res, err := db.Query("SELECT t2.id_usr, t2.nombre, t2.user, t1.id_usr as id_user FROM cotizaciones t1, usuarios t2 WHERE t1.id_cot = ? AND t1.id_emp=t2.id_emp", id)
+	defer res.Close()
+	ErrorCheck(err)
+
+	var id_usr int
+	var nombre string
+	var user string
+	var id_user int
+
+	for res.Next() {
+
+		err := res.Scan(&id_usr, &nombre, &user, &id_user)
+		ErrorCheck(err)
+		lista = append(lista, Lista{Id: id_usr, Nombre: fmt.Sprintf("%v (%v)", nombre, user)})
+
+	}
+
+	return lista, id_user
+}
 func GetUser(token string) bool {
 
 	db, err := GetMySQLDB()
@@ -1802,6 +2291,30 @@ func GetListaCotizaciones(id int) []Lista {
 
 	cn := 0
 	res, err := db.Query("SELECT id_cot, fecha FROM cotizaciones WHERE id_emp = ? AND eliminado = ?", id, cn)
+	defer res.Close()
+	ErrorCheck(err)
+
+	for res.Next() {
+
+		var id_cot int
+		var fecha string
+		err := res.Scan(&id_cot, &fecha)
+		ErrorCheck(err)
+		lista = append(lista, Lista{Id: id_cot, Nombre: fecha})
+
+	}
+	return lista
+}
+func GetAllListaCotizaciones() []Lista {
+
+	lista := []Lista{}
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT id_cot, fecha FROM cotizaciones WHERE eliminado = ?", cn)
 	defer res.Close()
 	ErrorCheck(err)
 
@@ -2846,7 +3359,7 @@ func GetLocalidades(db *sql.DB, id_emp int) Localidades {
 	propiedades := []Propiedad{}
 
 	cn := 0
-	res0, err := db.Query("SELECT t1.id_pro, t1.nombre, t1.lat, t1.lng, t1.direccion, t1.numero, t1.id_com, t1.id_ciu, t1.id_reg, t1.id_pai, t2.nombre as nombre_pai, t3.nombre as nombre_reg, t4.nombre as nombre_ciu, t5.nombre as nombre_com, t1.dominio, t1.dominio2, t1.atencion_publico, t1.copropiedad, t1.destino FROM propiedades t1, paises t2, regiones t3, ciudades t4, comunas t5 WHERE t1.eliminado = ? AND t1.id_emp = ? AND t1.id_pai=t2.id_pai AND t1.id_reg=t3.id_reg AND t1.id_ciu=t4.id_ciu AND t1.id_com=t5.id_com", cn, id_emp)
+	res0, err := db.Query("SELECT t1.id_pro, t1.nombre, t1.lat, t1.lng, t1.direccion, t1.numero, t1.id_com, t1.id_ciu, t1.id_reg, t1.id_pai, t2.nombre as nombre_pai, t3.nombre as nombre_reg, t4.nombre as nombre_ciu, t5.nombre as nombre_com, t1.dominio, t1.dominio2, t1.atencion_publico, t1.copropiedad, t1.destino, t1.sup_terreno, t1.sup_edificada, t1.sup_edificada_sn, t1.sup_edificada_bn, t1.cant_pisos, t1.electrico_te1, t1.dotacion_ap, t1.dotacion_alcance, t1.instalacion_ascensor, t1.te1_ascensor, t1.certificado_ascensor, t1.clima, t1.seguridad_incendio, t1.fiscal_serie, t1.fiscal_destino, t1.fiscal_exento, t1.valor_terreno, t1.valor_edificacion, t1.valor_obras_complementarias, t1.valor_total, t1.cert_info_previas, t1.tipo_instrumento, t1.normativo_destino FROM propiedades t1, paises t2, regiones t3, ciudades t4, comunas t5 WHERE t1.eliminado = ? AND t1.id_emp = ? AND t1.id_pai=t2.id_pai AND t1.id_reg=t3.id_reg AND t1.id_ciu=t4.id_ciu AND t1.id_com=t5.id_com", cn, id_emp)
 	defer res0.Close()
 	ErrorCheck(err)
 
@@ -2874,10 +3387,38 @@ func GetLocalidades(db *sql.DB, id_emp int) Localidades {
 	var copropiedad int
 	var destino int
 
+	var sup_terreno int
+	var sup_edificada int
+	var sup_edificada_sn int
+	var sup_edificada_bn int
+	var cant_pisos int
+
+	var electrico_te1 int
+	var dotacion_ap int
+	var dotacion_alcance int
+	var instalacion_ascensor int
+	var te1_ascensor int
+	var certificado_ascensor int
+	var clima int
+	var seguridad_incendio int
+
+	var fiscal_serie int
+	var fiscal_destino int
+	var fiscal_exento int
+
+	var valor_terreno int
+	var valor_edificacion int
+	var valor_obras_complementarias int
+	var valor_total int
+
+	var cert_info_previas int
+	var tipo_instrumento int
+	var normativo_destino int
+
 	for res0.Next() {
-		err := res0.Scan(&id_pro, &nombrepropiedad, &lat, &lng, &direccion, &numero, &id_com, &id_ciu, &id_reg, &id_pai, &nombre_pai, &nombre_reg, &nombre_ciu, &nombre_com, &dominio, &dominio2, &atencion_publico, &copropiedad, &destino)
+		err := res0.Scan(&id_pro, &nombrepropiedad, &lat, &lng, &direccion, &numero, &id_com, &id_ciu, &id_reg, &id_pai, &nombre_pai, &nombre_reg, &nombre_ciu, &nombre_com, &dominio, &dominio2, &atencion_publico, &copropiedad, &destino, &sup_terreno, &sup_edificada, &sup_edificada_sn, &sup_edificada_bn, &cant_pisos, &electrico_te1, &dotacion_ap, &dotacion_alcance, &instalacion_ascensor, &te1_ascensor, &certificado_ascensor, &clima, &seguridad_incendio, &fiscal_serie, &fiscal_destino, &fiscal_exento, &valor_terreno, &valor_edificacion, &valor_obras_complementarias, &valor_total, &cert_info_previas, &tipo_instrumento, &normativo_destino)
 		ErrorCheck(err)
-		propiedades = append(propiedades, Propiedad{Id_pro: id_pro, Nombre: nombrepropiedad, Lat: lat, Lng: lng, Direccion: direccion, Numero: numero, Id_com: id_com, Id_ciu: id_ciu, Id_reg: id_reg, Id_pai: id_pai, Nombre_pai: nombre_pai, Nombre_reg: nombre_reg, Nombre_ciu: nombre_ciu, Nombre_com: nombre_com, Dominio: dominio, Dominio2: dominio2, Atencion_publico: atencion_publico, Copropiedad: copropiedad, Destino: destino})
+		propiedades = append(propiedades, Propiedad{Id_pro: id_pro, Nombre: nombrepropiedad, Lat: lat, Lng: lng, Direccion: direccion, Numero: numero, Id_com: id_com, Id_ciu: id_ciu, Id_reg: id_reg, Id_pai: id_pai, Nombre_pai: nombre_pai, Nombre_reg: nombre_reg, Nombre_ciu: nombre_ciu, Nombre_com: nombre_com, Dominio: dominio, Dominio2: dominio2, Atencion_publico: atencion_publico, Copropiedad: copropiedad, Destino: destino, Sup_terreno: sup_terreno, Sup_edificada: sup_edificada, Sup_edificada_sn: sup_edificada_sn, Sup_edificada_bn: sup_edificada_bn, Cant_pisos: cant_pisos, Electrico_te1: electrico_te1, Dotacion_ap: dotacion_ap, Dotacion_alcance: dotacion_alcance, Instalacion_ascensor: instalacion_ascensor, Te1_ascensor: te1_ascensor, Certificado_ascensor: certificado_ascensor, Clima: clima, Seguridad_incendio: seguridad_incendio, Fiscal_serie: fiscal_serie, Fiscal_destino: fiscal_destino, Fiscal_exento: fiscal_exento, Valor_terreno: valor_terreno, Valor_edificacion: valor_edificacion, Valor_obras_complementarias: valor_obras_complementarias, Valor_total: valor_total, Cert_info_previas: cert_info_previas, Tipo_instrumento: tipo_instrumento, Normativo_destino: normativo_destino})
 	}
 
 	return Localidades{Propiedades: propiedades}
@@ -3263,6 +3804,33 @@ func BorrarCotizacion(db *sql.DB, token string, id int) Response {
 	}
 	return resp
 }
+func BorrarCotizacionAdmin(db *sql.DB, token string, id int) Response {
+
+	resp := Response{}
+	if SuperAdmin(token) {
+		del := 1
+		stmt, err := db.Prepare("UPDATE cotizaciones SET eliminado = ? WHERE id_cot = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(del, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Tipo = "success"
+			resp.Reload = 1
+			resp.Page = "AdminCotizacion"
+			resp.Titulo = "Cotizacion eliminada"
+			resp.Texto = "Cotizacion eliminada correctamente"
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar cotizacion"
+			resp.Texto = "La cotizacion no pudo ser eliminada"
+		}
+	} else {
+		resp.Tipo = "error"
+		resp.Titulo = "Error al eliminar cotizacion"
+		resp.Texto = "No tiene los permisos"
+	}
+	return resp
+}
 func BorrarPermiso(db *sql.DB, token string, id string) Response {
 
 	resp := Response{}
@@ -3616,6 +4184,162 @@ func BorrarAlerta(db *sql.DB, token string, id int) Response {
 	}
 	return resp
 }
+
+func InsertCotizacion(db *sql.DB, token string, uf string, id_emp int) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("INSERT INTO cotizaciones (precio_uf, fecha, id_usr, id_emp) VALUES (?,NOW(),1,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		_, err = stmt.Exec(uf, id_emp)
+		fmt.Println(err)
+		fmt.Println(id_emp)
+		fmt.Println(uf)
+		if err == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "AdminCotizacion"
+			resp.Msg = "Cotizacion ingresada correctamente"
+		} else {
+			resp.Msg = "La cotizacion no pudo ser ingresada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func UpdateCotizacion(db *sql.DB, token string, id int, uf string, id_emp int) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("UPDATE cotizaciones SET precio_uf = ?, id_emp = ? WHERE id_cot = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(uf, id_emp, id)
+		ErrorCheck(e)
+		if e == nil {
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = "AdminCotizacion"
+			resp.Msg = "Cotizacion actualizada correctamente"
+		} else {
+			resp.Msg = "La cotizacion no pudo ser actualizada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func InsertDetalleCotizacion(db *sql.DB, token string, id int, descripcion string, precio string, id_pro int, id_ale int) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("INSERT INTO cotizacion_detalle (id_cot, descripcion, precio, id_pro, id_ale) VALUES (?,?,?,?,?)")
+		ErrorCheck(err)
+		defer stmt.Close()
+		_, e := stmt.Exec(id, descripcion, precio, id_pro, id_ale)
+		ErrorCheck(e)
+		if err == nil {
+			RevisarCotizacion(db, id)
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = fmt.Sprintf("confCotizacion?id_cot=%v", id)
+			resp.Msg = "Item cotización ingresado correctamente"
+		} else {
+			resp.Msg = "El item cotización no pudo ser ingresada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func UpdateDetalleCotizacion(db *sql.DB, token string, id int, descripcion string, precio string, id_pro int, id_ale int) Response {
+
+	resp := Response{}
+	resp.Op = 2
+	if SuperAdmin(token) {
+		stmt, err := db.Prepare("UPDATE cotizacion_detalle SET descripcion = ?, precio = ? WHERE id_cot = ? AND id_pro = ? AND id_ale = ?")
+		ErrorCheck(err)
+		_, e := stmt.Exec(descripcion, precio, id, id_pro, id_ale)
+		ErrorCheck(e)
+		if e == nil {
+			RevisarCotizacion(db, id)
+			resp.Op = 1
+			resp.Reload = 1
+			resp.Page = fmt.Sprintf("confCotizacion?id_cot=%v", id)
+			resp.Msg = "Item cotización actualizada correctamente"
+		} else {
+			resp.Msg = "El item cotización no pudo ser actualizada"
+		}
+	} else {
+		resp.Msg = "No tiene permisos"
+	}
+	return resp
+}
+func BorrarDetalleCotizacion(db *sql.DB, token string, id int, id_pro int, id_ale int) Response {
+
+	resp := Response{}
+	if SuperAdmin(token) {
+
+		delForm, err := db.Prepare("DELETE FROM cotizacion_detalle WHERE id_cot = ? AND id_pro = ? AND  id_ale = ?")
+		ErrorCheck(err)
+		_, e := delForm.Exec(id_pro, id_ale)
+		defer db.Close()
+
+		ErrorCheck(e)
+		if e == nil {
+			resp.Tipo = "success"
+			resp.Reload = 1
+			resp.Page = fmt.Sprintf("confCotizacion?id_cot=%v", id)
+			resp.Titulo = "Item cotizacion eliminada"
+			resp.Texto = "Cotizacion eliminada correctamente"
+		} else {
+			resp.Tipo = "error"
+			resp.Titulo = "Error al eliminar item cotizacion"
+			resp.Texto = "El item cotizacion no pudo ser eliminada"
+		}
+	} else {
+		resp.Tipo = "error"
+		resp.Titulo = "Error al eliminar item cotizacion"
+		resp.Texto = "No tiene los permisos"
+	}
+	return resp
+}
+func RevisarCotizacion(db *sql.DB, id int) {
+
+	res, err := db.Query("SELECT precio FROM cotizacion_detalle WHERE id_cot = ?", id)
+	defer res.Close()
+	if err != nil {
+		ErrorCheck(err)
+	}
+
+	var total float32
+	var change bool = true
+
+	for res.Next() {
+		var precio float32
+		err := res.Scan(&precio)
+		if err != nil {
+			ErrorCheck(err)
+		}
+		if precio == 0 {
+			change = false
+		}
+		total = total + precio
+	}
+	if !change {
+		total = 0
+	}
+
+	stmt, err := db.Prepare("UPDATE cotizaciones SET uf = ? WHERE id_cot = ?")
+	ErrorCheck(err)
+	_, e := stmt.Exec(total, id)
+	ErrorCheck(e)
+}
+
 func GetPais(db *sql.DB, nombre string) (int64, bool) {
 
 	if nombre != "" {
@@ -4247,6 +4971,96 @@ func DatosCotizacion(id int) Cotizacion {
 
 	return cotizacion
 }
+func GetAlertasCotizaciones(id int) ([]Lista, int, string) {
+
+	lista := []Lista{}
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	res2, err := db.Query("SELECT t1.id_emp, t2.nombre FROM cotizaciones t1, empresa t2 WHERE t1.id_cot = ? AND t1.id_emp=t2.id_emp", id)
+	defer res2.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var id_emp int
+	var nombreemp string
+
+	if res2.Next() {
+		err := res2.Scan(&id_emp, &nombreemp)
+		ErrorCheck(err)
+	}
+
+	res, err := db.Query("SELECT t3.id_ale, t3.nombre as nombreale, t4.nombre as nombreprop, t1.fecha, t2.id_pro, t5.id_emp, t5.nombre as nombreemp FROM cotizaciones t1, cotizacion_detalle t2, alertas t3, propiedades t4, empresa t5 WHERE t1.id_cot = ? AND t1.id_cot=t2.id_cot AND t2.id_ale=t3.id_ale AND t2.id_pro=t4.id_pro AND t1.id_emp=t5.id_emp", id)
+	defer res.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var id_ale int
+	var id_pro int
+	var nombreale string
+	var nombreprop string
+	var fecha string
+
+	for res.Next() {
+
+		err := res.Scan(&id_ale, &nombreale, &nombreprop, &fecha, &id_pro, &id_emp, &nombreemp)
+		ErrorCheck(err)
+
+		lista = append(lista, Lista{Id: id_ale, Nombre: fmt.Sprintf("%v %v", nombreprop, nombreale), Aux: id_pro})
+	}
+
+	return lista, id_emp, nombreemp
+}
+func GetDetalleCotizacion(id_cot int, id_ale int, id_pro int) (string, float64) {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	res, err := db.Query("SELECT descripcion, precio FROM cotizacion_detalle WHERE id_cot=? AND id_ale=? AND id_pro=?", id_cot, id_ale, id_pro)
+	defer res.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var descripcion string
+	var precio float64
+
+	for res.Next() {
+
+		err := res.Scan(&descripcion, &precio)
+		ErrorCheck(err)
+	}
+
+	return descripcion, precio
+}
+func GetCotizacion(id_cot int) (int, int) {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	res, err := db.Query("SELECT id_emp, precio_uf FROM cotizaciones WHERE id_cot=?", id_cot)
+	defer res.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var id_emp int
+	var precio_uf int
+
+	for res.Next() {
+
+		err := res.Scan(&id_emp, &precio_uf)
+		ErrorCheck(err)
+	}
+
+	return id_emp, precio_uf
+}
 func FormatDateString(fecha string) string {
 
 	date0 := strings.Split(fecha, " ")
@@ -4281,6 +5095,49 @@ func GetMonthString(m string) string {
 	default:
 		return "Diciembre"
 	}
+}
+func CreateQr(key int) (bool, string) {
+
+	url := "https://www.redigo.cl/cotizacion/"
+	urlqr := fmt.Sprintf("%v/%v", url, key)
+
+	q, err := qrcode.New(urlqr, qrcode.Medium)
+	if err != nil {
+		return false, ""
+	}
+
+	name := fmt.Sprintf("./tmp/%vqr.png", key)
+
+	q.DisableBorder = true
+	q.BackgroundColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+	q.ForegroundColor = color.RGBA{R: 255, G: 255, B: 255, A: 255}
+
+	err = q.WriteFile(128, name)
+	if err != nil {
+		return false, ""
+	}
+	return true, name
+}
+func SeparadordeMiles(num int) string {
+	numstr := fmt.Sprintf("%v", num)
+	res := make([]byte, 0)
+
+	for i, _ := range numstr {
+		if i%3 == 0 && i > 0 {
+			res = append(res, 46)
+		}
+		res = append(res, numstr[len(numstr)-i-1])
+	}
+	res = append(res, 32)
+	res = append(res, 36)
+	return string(Reverse(res))
+}
+func Reverse(numbers []uint8) []uint8 {
+	for i := 0; i < len(numbers)/2; i++ {
+		j := len(numbers) - i - 1
+		numbers[i], numbers[j] = numbers[j], numbers[i]
+	}
+	return numbers
 }
 
 //CREATE DATABASE pelao CHARACTER SET utf8 COLLATE utf8_spanish2_ci;

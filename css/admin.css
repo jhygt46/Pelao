@@ -481,6 +481,15 @@ body{
 .h .i .fc .lu .u .btns .car{
     background-position: -174px -190px;
 }
+.h .i .fc .lu .u .btns .env{
+    background-position: -533px -431px;
+}
+.h .i .fc .lu .u .btns .con{
+    background-position: -54px -94px;
+}
+.h .i .fc .lu .u .btns .dow{
+    background-position: -413px -431px;
+}
 .h .i .fc .lu .u .btns .mas{
     background-position: -174px -334px;
 }

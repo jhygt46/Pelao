@@ -5,6 +5,8 @@
     var pos = [];
     var propiedades = JSON.parse({{.PropiedadesString}});
 
+    console.log(propiedades);
+
     function ShowProps(){
 
         var lat0 = 0;
@@ -12,6 +14,8 @@
         var lng0 = 0;
         var lng1 = 0;
         var show = true;
+
+        console.log("ShowProps");
 
         clearMarkers();
         $(".listpropbusqueda").html("");
@@ -54,10 +58,16 @@
 
     }
     function HasValue(list, value){
-        console.log(list);
-        console.log(value);
-        for(var i=0; i<list.length; i++){
-            if(list[i].v == value){
+        if(list.t == 1){
+            for(var i=0; i<list.a.length; i++){
+                if(list.a[i].v == value){
+                    return true;
+                }
+            }
+        }
+        if(list.t == 2){
+            console.log(list.a, value);
+            if(list.a[0] <= value && list.a[1] >= value){
                 return true;
             }
         }
@@ -76,18 +86,23 @@
         var id = that.getAttribute('id');
         var values = document.getElementsByClassName(id);
 
-        var n1 = values[0].value;
-        var n2 = values[1].value;
+        if(values[0].value != "" && values[1].value != ""){
 
-        if(isNaN(n1) && isNaN(n2)){
-            if(BuscarPropConf[id] == undefined){
-                BuscarPropConf[id] = [values[0].value, values[1].value];
-            }else{
-                BuscarPropConf[id][0] = values[0].value;
-                BuscarPropConf[id][1] = values[1].value;
+            var n1 = +values[0].value;
+            var n2 = +values[1].value;
+
+            if(typeof n1 === 'number' && typeof n2 === 'number'){
+                if(BuscarPropConf[id] == undefined){
+                    BuscarPropConf[id] = {"t":2,"a":[n1, n2],"c":id};
+                }else{
+                    BuscarPropConf[id].a[0] = n1;
+                    BuscarPropConf[id].a[1] = n2;
+                }
+                
+                ShowProps();
             }
+
         }
-        ShowProps();
 
     }
     function handleChange(that){
@@ -96,10 +111,10 @@
         var cname = that.getAttribute('class');
         
         if(!that.checked){
-            const index = GetIndexOf(BuscarPropConf[id], cname);
+            const index = GetIndexOf(BuscarPropConf[id].a, cname);
             if (index > -1) {
-                BuscarPropConf[id].splice(index, 1);
-                if(BuscarPropConf[id].length == 0){
+                BuscarPropConf[id].a.splice(index, 1);
+                if(BuscarPropConf[id].a.length == 0){
                     delete BuscarPropConf[id]; 
                 }
             }
@@ -111,9 +126,9 @@
             }
         }else{
             if(BuscarPropConf[id] == undefined){
-                BuscarPropConf[id] = [{"v": that.value, "c": cname }];
+                BuscarPropConf[id] = {"t":1,"a":[{"v": that.value, "c": cname }]};
             }else{
-                BuscarPropConf[id].push({"v": that.value, "c": cname });
+                BuscarPropConf[id].a.push({"v": that.value, "c": cname });
             }
             if(id == "Id_pai" || id == "Id_reg" || id == "Id_ciu"){
                 var el = that.parentElement.parentElement.children;
@@ -265,10 +280,22 @@
         for (var k in BuscarPropConf){
             if(k != "id_pai" && k != "id_reg" && k != "id_ciu" && k != "id_com"){
                 if (BuscarPropConf.hasOwnProperty(k)) {
-                    for(var i=0; i<BuscarPropConf[k].length; i++){
-                        document.getElementsByClassName(BuscarPropConf[k][i].c)[0].checked = true;
+                    if(BuscarPropConf[k].t == 1){
+                        for(var i=0; i<BuscarPropConf[k].a.length; i++){
+                            document.getElementsByClassName(BuscarPropConf[k].a[i].c)[0].checked = true;
+                        }
+                    }
+                    if(BuscarPropConf[k].t == 2){
+                        document.getElementsByClassName(BuscarPropConf[k].c)[0].value = BuscarPropConf[k].a[0];
+                        document.getElementsByClassName(BuscarPropConf[k].c)[1].value = BuscarPropConf[k].a[1];
                     }
                 }
+            }
+        }
+
+        for (var k in BuscarPropConf){
+            if (BuscarPropConf.hasOwnProperty(k)) {
+                console.log(BuscarPropConf[k]);
             }
         }
 
@@ -403,16 +430,180 @@
                     <div class="cfl">
                         <div class="cflnom">Superficie Terreno</div>
                         <div class="cflops clearfix">
-                            <input type="text" id="superficio_terreno" class="vmm superficio_terreno" onblur="blurChange(this, 0)" />
-                            <input type="text" id="superficio_terreno" class="vmm superficio_terreno" onblur="blurChange(this, 1)" />
+                            <input type="text" id="Sup_terreno" class="vmm Sup_terreno" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_terreno" class="vmm Sup_terreno" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Superficie Edificada</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_edificada" class="vmm Sup_edificada" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_edificada" class="vmm Sup_edificada" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Superficie Edificada SN</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_edificada_sn" class="vmm Sup_edificada_sn" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_edificada_sn" class="vmm Sup_edificada_sn" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Superficie Edificada BN</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_edificada_bn" class="vmm Sup_edificada_bn" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_edificada_bn" class="vmm Sup_edificada_bn" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Cantidad de Pisos</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Cant_pisos" class="vmm Cant_pisos" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Cant_pisos" class="vmm Cant_pisos" onblur="blurChange(this, 1)" />
                         </div>
                     </div>
                 </div>
                 <div class="pfl Prop-3">FORM 3</div>
-                <div class="pfl Prop-4">FORM 4</div>
-                <div class="pfl Prop-5">FORM 5</div>
-                <div class="pfl Prop-6">FORM 6</div>
-                <div class="pfl Prop-7">FORM 7</div>
+                <div class="pfl Prop-4">
+                    <div class="cfl">
+                        <div class="cflnom">Electrico TE1:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Electrico_te1" class="electrico_te1-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Electrico_te1" class="electrico_te1-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Electrico_te1" class="electrico_te1-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Dotacion AP:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_ap" class="dotacion_ap-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_ap" class="dotacion_ap-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_ap" class="dotacion_ap-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Dotacion Alcance:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_alcance" class="dotacion_alcance-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_alcance" class="dotacion_alcance-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_alcance" class="dotacion_alcance-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Instalacion Ascensor:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Instalacion_ascensor" class="instalacion_ascensor-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Instalacion_ascensor" class="instalacion_ascensor-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Instalacion_ascensor" class="instalacion_ascensor-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Te1 Ascensor:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Te1_ascensor" class="te1_ascensor-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Te1_ascensor" class="te1_ascensor-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Te1_ascensor" class="te1_ascensor-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Certificado Ascensor:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Certificado_ascensor" class="certificado_ascensor-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Certificado_ascensor" class="certificado_ascensor-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Certificado_ascensor" class="certificado_ascensor-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Clima:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Clima" class="clima-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Clima" class="clima-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Clima" class="clima-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Seguridad Incendio:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Seguridad_incendio" class="seguridad_incendio-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Seguridad_incendio" class="seguridad_incendio-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Seguridad_incendio" class="seguridad_incendio-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-5">
+                    <div class="cfl">
+                        <div class="cflnom">Serie:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_serie" class="fiscal_serie-1" value="1"><div class="nomcheck">Agricola</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_serie" class="fiscal_serie-2" value="2"><div class="nomcheck">No Agricola</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Destino:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-1" value="1"><div class="nomcheck">Comercial</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-2" value="2"><div class="nomcheck">Industrial</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-3" value="3"><div class="nomcheck">Habitacional</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-4" value="4"><div class="nomcheck">Educacional</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-5" value="5"><div class="nomcheck">Salud</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-6" value="6"><div class="nomcheck">Otro</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Exento:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_exento" class="fiscal_exento-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_exento" class="fiscal_exento-2" value="2"><div class="nomcheck">No</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-6">
+                    <div class="cfl">
+                        <div class="cflnom">Valor Terreno</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_terreno" class="vmm Valor_terreno" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_terreno" class="vmm Valor_terreno" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Valor Edificación</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_edificacion" class="vmm Valor_edificacion" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_edificacion" class="vmm Valor_edificacion" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Valor Obras Complementarias</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_obras_complementarias" class="vmm Valor_obras_complementarias" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_obras_complementarias" class="vmm Valor_obras_complementarias" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Valor Total</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_total" class="vmm Valor_total" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_total" class="vmm Valor_total" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-7">
+                    <div class="cfl">
+                        <div class="cflnom">Certificado Informaciones Previas:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Cert_info_previas" class="cert_info_previas-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Cert_info_previas" class="cert_info_previas-2" value="2"><div class="nomcheck">No</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Tipo de Instrumento:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-1" value="1"><div class="nomcheck">Plan Regulador Comunal</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-2" value="2"><div class="nomcheck">Plan Regulador Intercomunal</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-2" value="3"><div class="nomcheck">Plan Regulador Metropolitano</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-2" value="4"><div class="nomcheck">Otro</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Destino:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Normativo_destino" class="normativo_destino-1" value="1"><div class="nomcheck">Urbano</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Normativo_destino" class="normativo_destino-2" value="2"><div class="nomcheck">Rural</div></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="pfl Prop-8">FORM 8</div>
             </div>
         </div>
@@ -429,11 +620,7 @@
                 <li class="back" onclick="backurl()"></li>
             </ul>
         </div>
-        <ul class='lu listpropbusqueda'>
-            
-            
-            
-        </ul>
+        <ul class='lu listpropbusqueda'></ul>
     </div>
 </div>
 <br />
