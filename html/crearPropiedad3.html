@@ -1,0 +1,211 @@
+<script>
+
+    document.getElementById('electrico_te1').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('electrico_te1')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('electrico_te1')[0].style.display = "none"
+        }
+    })
+    document.getElementById('dotacion_ap').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('dotacion_ap')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('dotacion_ap')[0].style.display = "none"
+        }
+    })
+    document.getElementById('dotacion_alcance').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('dotacion_alcance')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('dotacion_alcance')[0].style.display = "none"
+        }
+    })
+    document.getElementById('instalacion_ascensor').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('instalacion_ascensor')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('instalacion_ascensor')[0].style.display = "none"
+        }
+    })
+    document.getElementById('te1_ascensor').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('te1_ascensor')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('te1_ascensor')[0].style.display = "none"
+        }
+    })
+    document.getElementById('certificado_ascensor').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('certificado_ascensor')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('certificado_ascensor')[0].style.display = "none"
+        }
+    })
+    document.getElementById('clima').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('clima')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('clima')[0].style.display = "none"
+        }
+    })
+    document.getElementById('seguridad_incendio').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('seguridad_incendio')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('seguridad_incendio')[0].style.display = "none"
+        }
+    })
+
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Permiso Edificación" onclick='navlink("/pages/crearPropiedad2PermisoEdificacion?id={{.FormId}}")'></a>
+        {{if eq .NextPage 4}}
+        <a class="back icn r2" title="Situación Comercial" onclick='navlink("/pages/crearPropiedad4?id={{.FormId}}")'></a>
+        {{end}}
+        {{if eq .NextPage 5}}
+        <a class="back icn r2" title="Situación Legal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
+        {{end}}
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Electrico TE1:</span>
+                    <select id="electrico_te1">
+                        <option value="0" {{if eq .ElectricoTe1 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .ElectricoTe1 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .ElectricoTe1 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .ElectricoTe1 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="electrico_te1" {{if eq .ElectricoTe1 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_electrico_te1" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion AP:</span>
+                    <select id="dotacion_ap">
+                        <option value="0" {{if eq .DotacionAp 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .DotacionAp 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .DotacionAp 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .DotacionAp 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="dotacion_ap" {{if eq .DotacionAp 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_dotacion_ap" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion Alcance:</span>
+                    <select id="dotacion_alcance">
+                        <option value="0" {{if eq .DotacionAlcance 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .DotacionAlcance 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .DotacionAlcance 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .DotacionAlcance 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="dotacion_alcance" {{if eq .DotacionAlcance 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_dotacion_alcance" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion Alcance:</span>
+                    <select id="instalacion_ascensor">
+                        <option value="0" {{if eq .InstalacionAscensor 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .InstalacionAscensor 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .InstalacionAscensor 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .InstalacionAscensor 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="instalacion_ascensor" {{if eq .InstalacionAscensor 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_instalacion_ascensor" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion Alcance:</span>
+                    <select id="te1_ascensor">
+                        <option value="0" {{if eq .Te1Ascensor 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Te1Ascensor 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .Te1Ascensor 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .Te1Ascensor 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="te1_ascensor" {{if eq .Te1Ascensor 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_te1_ascensor" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion Alcance:</span>
+                    <select id="certificado_ascensor">
+                        <option value="0" {{if eq .CertificadoAscensor 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CertificadoAscensor 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .CertificadoAscensor 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .CertificadoAscensor 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="certificado_ascensor" {{if eq .CertificadoAscensor 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_certificado_ascensor" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion Alcance:</span>
+                    <select id="clima">
+                        <option value="0" {{if eq .Clima 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Clima 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .Clima 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .Clima 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="clima" {{if eq .Clima 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_clima" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Dotacion Alcance:</span>
+                    <select id="seguridad_incendio">
+                        <option value="0" {{if eq .SeguridadIncendio 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .SeguridadIncendio 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .SeguridadIncendio 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .SeguridadIncendio 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="seguridad_incendio" {{if eq .SeguridadIncendio 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Documento:</span>
+                    <input id="doc_seguridad_incendio" type="file" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>

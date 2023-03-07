@@ -1,0 +1,70 @@
+<script>
+    var marker;
+    var map;
+    initMap();
+    function initMap() {
+        var position = { lat: {{.Lat}}, lng: {{.Lng}} };
+        var zoom = 15;
+        map = new google.maps.Map(document.getElementById("map_detalle"), {
+            zoom: zoom,
+            center: position,
+        });
+        marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            draggable: true
+        });
+    }
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="" onclick="backurl()"></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>Datos Generales</h1>
+            <ul class="clearfix valign">
+                <li class='u icn ic2'><a title='Modificar' onclick='navlink("/pages/crearPropiedad?id={{.FormId}}")'></a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="detalle_prop">
+        <div class="clearfix paso">
+            <div class="pasob">
+                <div class="pasotitulo">Titulo</div>
+                <div class="pasoinfo">data</div>
+                <div class="pasotitulo">Titulo</div>
+                <div class="pasoinfo">data</div>
+            </div>
+            <div class="pasoc">
+                <div class="pasotitulo">Titulo</div>
+                <div class="pasoinfo">data</div>
+                <div class="pasotitulo">Titulo</div>
+                <div class="pasoinfo">data</div>
+            </div>
+            <div class="pasoa" id="map_detalle"></div>
+        </div>
+    </div>
+</div>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>Datos Generales</h1>
+            <ul class="clearfix valign">
+                <li class='u icn ic2'><a title='Modificar' onclick='navlink("/pages/crearPropiedad2?id={{.FormId}}")'></a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="detalle_prop">
+        <div class="clearfix paso">
+            <div class="pasob">Hola</div>
+            <div class="pasoc">Mundo</div>
+            <div class="pasoa"></div>
+        </div>
+    </div>
+</div>
+
