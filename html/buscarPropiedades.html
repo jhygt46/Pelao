@@ -1,0 +1,647 @@
+<script>
+
+    var map;
+    var markers = [];
+    var pos = [];
+    var propiedades = JSON.parse({{.PropiedadesString}});
+
+
+    function ListProps(props){
+        var txt = "[";
+        for(var i=0; i<props.length; i++){
+            if(i == 0){
+                txt += props[i]
+            }else{
+                txt += ","+props[i]
+            }
+        }
+        return txt += "]";
+    }
+    function ShowProps(){
+
+        var lat0 = 0;
+        var lat1 = 0;
+        var lng0 = 0;
+        var lng1 = 0;
+        var show = true;
+        var listdownload = [];
+
+
+        clearMarkers();
+        $(".listpropbusqueda").html("");
+        
+        for(var i=0; i<propiedades.length; i++){
+            show = true;
+            for (var k in BuscarPropConf){
+                if (BuscarPropConf.hasOwnProperty(k)) {
+                    if(show && !HasValue(BuscarPropConf[k], propiedades[i][k])){
+                        show = false;
+                    }
+                }
+            }
+            if(show){
+
+                if(lat0 == 0 || lat0 > propiedades[i].lat){ lat0 = propiedades[i].lat; }
+                if(lat1 == 0 || lat1 < propiedades[i].lat){ lat1 = propiedades[i].lat; }
+                if(lng0 == 0 || lng0 > propiedades[i].lng){ lng0 = propiedades[i].lng; }
+                if(lng1 == 0 || lng1 < propiedades[i].lng){ lng1 = propiedades[i].lng; }
+
+                addMarker(propiedades[i]);
+                $(".listpropbusqueda").append("<li class='u'><div class='no'><a onclick='navlink(\"/pages/detallePropiedad?id="+propiedades[i].Id_pro+"\")' style='display:block'>"+propiedades[i].Nombre+"</a></div><div class='btns clearfix' style='position:absolute; top:5px'><a title='Modificar' class='icn mas propicn-"+propiedades[i].Id_pro+"' onclick='verProp("+propiedades[i].Id_pro+")'></a></div><div style='display:none; height: 200px' class='prop-"+propiedades[i].Id_pro+"'>HOLA</div></li>");
+                listdownload.push(propiedades[i].Id_pro)
+
+            }
+        }
+        
+        $("#downexcel").attr("href", "/descargar_excel/propiedades_"+ListProps(listdownload)+".xlsx")
+
+        var difflat = lat1 - lat0;
+        var difflng = lng1 - lng0;
+        var diff = 0
+        
+        if(difflat > difflng){ diff = difflat; }else{ diff = difflng; }
+        var zoom = getZoom(diff);
+        var nlat = lat0 + difflat / 2;
+        var nlng = lng0 + difflng / 2;
+
+        window.setTimeout(() => {
+            map.setZoom(zoom);
+            map.setCenter({lat: nlat, lng: nlng});
+        }, 500);
+
+    }
+    function HasValue(list, value){
+        if(list.t == 1){
+            for(var i=0; i<list.a.length; i++){
+                if(list.a[i].v == value){
+                    return true;
+                }
+            }
+        }
+        if(list.t == 2){
+            console.log(list.a, value);
+            if(list.a[0] <= value && list.a[1] >= value){
+                return true;
+            }
+        }
+        return false;
+    }
+    function GetIndexOf(list, cname){
+        for(var i=0; i<list.length; i++){
+            if(list[i].c == cname){
+                return i;
+            }
+        }
+        return -1;
+    }
+    function blurChange(that, n){
+
+        var id = that.getAttribute('id');
+        var values = document.getElementsByClassName(id);
+
+        if(values[0].value != "" && values[1].value != ""){
+
+            var n1 = +values[0].value;
+            var n2 = +values[1].value;
+
+            if(typeof n1 === 'number' && typeof n2 === 'number'){
+                if(BuscarPropConf[id] == undefined){
+                    BuscarPropConf[id] = {"t":2,"a":[n1, n2],"c":id};
+                }else{
+                    BuscarPropConf[id].a[0] = n1;
+                    BuscarPropConf[id].a[1] = n2;
+                }
+                
+                ShowProps();
+            }
+
+        }
+
+    }
+    function handleChange(that){
+
+        var id = that.getAttribute('id');
+        var cname = that.getAttribute('class');
+        
+        if(!that.checked){
+            const index = GetIndexOf(BuscarPropConf[id].a, cname);
+            if (index > -1) {
+                BuscarPropConf[id].a.splice(index, 1);
+                if(BuscarPropConf[id].a.length == 0){
+                    delete BuscarPropConf[id]; 
+                }
+            }
+            if(id == "Id_pai" || id == "Id_reg" || id == "Id_ciu"){
+                var el = that.parentElement.parentElement.children;
+                for(var i=1; i<el.length; i++){
+                    el[i].style.display = "none";
+                }
+            }
+        }else{
+            if(BuscarPropConf[id] == undefined){
+                BuscarPropConf[id] = {"t":1,"a":[{"v": that.value, "c": cname }]};
+            }else{
+                BuscarPropConf[id].a.push({"v": that.value, "c": cname });
+            }
+            if(id == "Id_pai" || id == "Id_reg" || id == "Id_ciu"){
+                var el = that.parentElement.parentElement.children;
+                for(var i=1; i<el.length; i++){
+                    el[i].style.display = "block";
+                }
+            }
+        }
+        ShowProps();
+    }
+    function GetPosProd(Props){
+
+        var locationobj = [];
+        
+        for(var i=0; i<Props.length; i++){
+
+            var pos1 = -1;
+            var pos2 = -1;
+            var pos3 = -1;
+            var pos4 = -1;
+
+            if(locationobj.length > 0){
+                for(var j=0; j<locationobj.length; j++){
+                    if(locationobj[j].Id_pai == Props[i].Id_pai){
+                        locationobj[j].cant = locationobj[j].cant + 1;
+                        pos1 = j;
+                    }
+                }
+            }
+
+            if(pos1 == -1){
+                locationobj.push({ Id_pai: Props[i].Id_pai, nombre: Props[i].Nombre_pai, cant: 1, lista_region: [] });
+                pos1 = locationobj.length - 1;
+            }
+
+            if(locationobj[pos1].lista_region.length > 0){
+                for(var j=0; j<locationobj[pos1].lista_region.length; j++){
+                    if(locationobj[pos1].lista_region[j].Id_reg == Props[i].Id_reg){
+                        locationobj[pos1].lista_region[j].cant = locationobj[pos1].lista_region[j].cant + 1;
+                        pos2 = j;
+                    }
+                }
+            }
+            if(pos2 == -1){
+                locationobj[pos1].lista_region.push({ Id_reg: Props[i].Id_reg, nombre: Props[i].Nombre_reg, cant: 1, lista_ciudades: [] });
+                pos2 = locationobj[pos1].lista_region.length - 1;
+            }
+
+            if(locationobj[pos1].lista_region[pos2].lista_ciudades.length > 0){
+                for(var j=0; j<locationobj[pos1].lista_region[pos2].lista_ciudades.length; j++){
+                    if(locationobj[pos1].lista_region[pos2].lista_ciudades[j].Id_ciu == Props[i].Id_ciu){
+                        locationobj[pos1].lista_region[pos2].lista_ciudades[j].cant = locationobj[pos1].lista_region[pos2].lista_ciudades[j].cant + 1;
+                        pos3 = j;
+                    }
+                }
+            }
+            if(pos3 == -1){
+                locationobj[pos1].lista_region[pos2].lista_ciudades.push({ Id_ciu: Props[i].Id_ciu, nombre: Props[i].Nombre_ciu, cant: 1, lista_comunas: [] });
+                pos3 = locationobj[pos1].lista_region[pos2].lista_ciudades.length - 1;
+            }
+
+            if(locationobj[pos1].lista_region[pos2].lista_ciudades[pos3].lista_comunas.length > 0){
+                for(var j=0; j<locationobj[pos1].lista_region[pos2].lista_ciudades[pos3].lista_comunas.length; j++){
+                    if(locationobj[pos1].lista_region[pos2].lista_ciudades[pos3].lista_comunas[j].Id_com == Props[i].Id_com){
+                        locationobj[pos1].lista_region[pos2].lista_ciudades[pos3].lista_comunas[j].cant = locationobj[pos1].lista_region[pos2].lista_ciudades[pos3].lista_comunas[j].cant + 1;
+                        pos4 = j;
+                    }
+                }
+            }
+            if(pos4 == -1){
+                locationobj[pos1].lista_region[pos2].lista_ciudades[pos3].lista_comunas.push({ Id_com: Props[i].Id_com, nombre: Props[i].Nombre_com, cant: 1 });
+            }
+
+        }
+
+        return locationobj;
+    }
+    function FormProps(){
+
+        var objPosition = GetPosProd(propiedades);
+
+        var html = "";
+        for(var i=0; i<objPosition.length; i++){
+
+            showIdpai = "";
+            displayIdpai = "style='display:none'";
+            if (BuscarPropConf.hasOwnProperty("Id_pai")) {
+                if(HasValue(BuscarPropConf.Id_pai, objPosition[i].Id_pai)){
+                    showIdpai = "checked='checked'";
+                    displayIdpai = "style='display:block'";
+                }
+            }
+
+            html += '<div class="tb0"><div class="SePropCheck clearfix"><input '+showIdpai+' type="checkbox" onchange="handleChange(this)" id="Id_pai" class="id_pai-'+objPosition[i].Id_pai+'" value="'+objPosition[i].Id_pai+'"><div class="nomcheck">'+objPosition[i].nombre+' ('+objPosition[i].cant+')</div></div>';
+            for(var j=0; j<objPosition[i].lista_region.length; j++){
+
+                showIdreg = "";
+                displayIdreg = "style='display:none'";
+                if (BuscarPropConf.hasOwnProperty("Id_reg")) {
+                    if(HasValue(BuscarPropConf.Id_reg, objPosition[i].lista_region[j].Id_reg)){
+                        showIdreg = "checked='checked'";
+                        displayIdreg = "style='display:block'";
+                    }
+                }
+
+                html += '<div '+displayIdpai+' class="tb1"><div class="SePropCheck clearfix"><input '+showIdreg+' type="checkbox" onchange="handleChange(this)" id="Id_reg" class="id_reg-'+objPosition[i].lista_region[j].Id_reg+'" value="'+objPosition[i].lista_region[j].Id_reg+'"><div class="nomcheck">'+objPosition[i].lista_region[j].nombre+' ('+objPosition[i].lista_region[j].cant+')</div></div>';
+                for(var k=0; k<objPosition[i].lista_region[j].lista_ciudades.length; k++){
+
+                    showIdciu = "";
+                    displayIdciu = "style='display:none'";
+                    if (BuscarPropConf.hasOwnProperty("Id_ciu")) {
+                        if(HasValue(BuscarPropConf.Id_ciu, objPosition[i].lista_region[j].lista_ciudades[k].Id_ciu)){
+                            showIdciu = "checked='checked'";
+                            displayIdciu = "style='display:block'";
+                        }
+                    }
+
+                    html += '<div '+displayIdreg+' class="tb2"><div class="SePropCheck clearfix"><input '+showIdciu+' type="checkbox" onchange="handleChange(this)" id="Id_ciu" class="id_ciu-'+objPosition[i].lista_region[j].lista_ciudades[k].Id_ciu+'" value="'+objPosition[i].lista_region[j].lista_ciudades[k].Id_ciu+'"><div class="nomcheck">'+objPosition[i].lista_region[j].lista_ciudades[k].nombre+' ('+objPosition[i].lista_region[j].lista_ciudades[k].cant+')</div></div><div '+displayIdciu+' class="tb3">';
+                    for(var m=0; m<objPosition[i].lista_region[j].lista_ciudades[k].lista_comunas.length; m++){
+                        
+                        showIdcom = "";
+                        if (BuscarPropConf.hasOwnProperty("Id_com")) {
+                            if(HasValue(BuscarPropConf.Id_com, objPosition[i].lista_region[j].lista_ciudades[k].lista_comunas[m].Id_com)){
+                                showIdcom = "checked='checked'";
+                            }
+                        }
+
+                        html += '<div class="SePropCheck clearfix"><input '+showIdcom+' type="checkbox" onchange="handleChange(this)" id="Id_com" class="id_com-'+objPosition[i].lista_region[j].lista_ciudades[k].lista_comunas[m].Id_com+'" value="'+objPosition[i].lista_region[j].lista_ciudades[k].lista_comunas[m].Id_com+'"><div class="nomcheck">'+objPosition[i].lista_region[j].lista_ciudades[k].lista_comunas[m].nombre+' ('+objPosition[i].lista_region[j].lista_ciudades[k].lista_comunas[m].cant+')</div></div>';
+                    
+                    }
+                    html += '</div></div>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        $('.Prop-0').html(html);
+
+        $('.Prop-0').show(); 
+        $('.Prop-1').hide(); 
+        $('.Prop-2').hide(); 
+        $('.Prop-3').hide(); 
+        $('.Prop-4').hide(); 
+        $('.Prop-5').hide(); 
+        $('.Prop-6').hide(); 
+        $('.Prop-7').hide(); 
+        $('.Prop-8').hide();
+
+        for (var k in BuscarPropConf){
+            if(k != "id_pai" && k != "id_reg" && k != "id_ciu" && k != "id_com"){
+                if (BuscarPropConf.hasOwnProperty(k)) {
+                    if(BuscarPropConf[k].t == 1){
+                        for(var i=0; i<BuscarPropConf[k].a.length; i++){
+                            document.getElementsByClassName(BuscarPropConf[k].a[i].c)[0].checked = true;
+                        }
+                    }
+                    if(BuscarPropConf[k].t == 2){
+                        document.getElementsByClassName(BuscarPropConf[k].c)[0].value = BuscarPropConf[k].a[0];
+                        document.getElementsByClassName(BuscarPropConf[k].c)[1].value = BuscarPropConf[k].a[1];
+                    }
+                }
+            }
+        }
+
+        for (var k in BuscarPropConf){
+            if (BuscarPropConf.hasOwnProperty(k)) {
+                console.log(BuscarPropConf[k]);
+            }
+        }
+
+    }
+    function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 6,
+        });
+        ShowProps();
+        FormProps();  
+    }
+    function clearMarkers() {
+        for (let i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+    }
+    function addMarkerWithTimeout(position, timeout) {
+        window.setTimeout(() => {
+            var marker = new google.maps.Marker({
+                position: position,
+                map,
+                animation: google.maps.Animation.DROP,
+                //index: 789,
+            });
+            attachSecretMessage(marker, position);
+            markers.push(marker);
+        }, timeout);
+    }
+    function addMarker(position) {
+        //console.log("ADD MARK: "+position.lat+" - "+position.lng+"");
+        var marker = new google.maps.Marker({
+            position: { lat: position.lat, lng: position.lng },
+            map,
+            animation: google.maps.Animation.DROP,
+            //index: 789,
+        });
+        attachSecretMessage(marker, position);
+        markers.push(marker);
+    }
+    function attachSecretMessage(marker, propiedad) {
+        //infowindow.close();
+        content = "<div>"+propiedad.Direccion+" "+propiedad.Numero+"</div><div>"+propiedad.lng+"</div>";
+        var infowindow = new google.maps.InfoWindow({ content: content });
+        infowindow.open(marker.get("map"), marker);
+        marker.addListener("click", () => {
+            infowindow.setContent("<div>Y QUE WA</div><div>HOLA MUNDO</div>");
+            infowindow.open(marker.get("map"), marker);
+        });
+    }
+    function verProp(id){
+        //that.parentElement.parentElement.children[2].show(500);
+        if($(".prop-"+id).is(":visible")){
+            $(".prop-"+id).hide(500);
+            $(".propicn-"+id).addClass("mas");
+            $(".propicn-"+id).removeClass("menos");
+        }else{
+            $(".prop-"+id).show(500);
+            $(".propicn-"+id).addClass("menos");
+            $(".propicn-"+id).removeClass("mas");
+        }
+    }
+
+    initMap();
+
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Mis Cotizaciones" onclick="backurl()"></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <div class="PropBtns clearfix">
+            <div class="PropBtn prop-btn0" onclick="showFrom(0)">Posicion</div>
+            <div class="PropBtn" onclick="showFrom(1)">Form1</div>
+            <div class="PropBtn" onclick="showFrom(2)">Form2</div>
+            <div class="PropBtn" onclick="showFrom(3)">Form3</div>
+            <div class="PropBtn" onclick="showFrom(4)">Form4</div>
+            <div class="PropBtn" onclick="showFrom(5)">Form5</div>
+            <div class="PropBtn" onclick="showFrom(6)">Form6</div>
+            <div class="PropBtn" onclick="showFrom(7)">Form7</div>
+            <div class="PropBtn" onclick="showFrom(8)">Form8</div>
+        </div>
+        <div class="buscarProp clearfix">
+            <div class="PropMap" id="map"></div>
+            <div class="PropForm">
+                <div class="pfl Prop-0"></div>
+                <div class="pfl Prop-1">
+                    <div class="cfl">
+                        <div class="cflnom">Dominio:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dominio" class="dominio-1" value="1"><div class="nomcheck">Propio</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dominio" class="dominio-2" value="2"><div class="nomcheck">Arrendado</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Dominio2:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dominio2" class="dominio2-1" value="1"><div class="nomcheck">Uso Propio</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dominio2" class="dominio2-2" value="2"><div class="nomcheck">Arrendado a terceros</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Atencion a publico:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Atencion_publico" class="atencion-publico-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Atencion_publico" class="atencion-publico-2" value="2"><div class="nomcheck">No</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Copropiedad:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Copropiedad" class="copropiedad-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Copropiedad" class="copropiedad-2" value="2"><div class="nomcheck">No</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Uso o destino:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-1" value="1"><div class="nomcheck">Retail</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="2"><div class="nomcheck">Servicios</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="3"><div class="nomcheck">Industrial</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="4"><div class="nomcheck">Similar al industrial</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="5"><div class="nomcheck">Salud</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="6"><div class="nomcheck">Educacional</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="7"><div class="nomcheck">Transporte</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Destino" class="destino-2" value="8"><div class="nomcheck">Otros</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-2">
+                    <div class="cfl">
+                        <div class="cflnom">Superficie Terreno</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_terreno" class="vmm Sup_terreno" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_terreno" class="vmm Sup_terreno" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Superficie Edificada</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_edificada" class="vmm Sup_edificada" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_edificada" class="vmm Sup_edificada" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Superficie Edificada SN</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_edificada_sn" class="vmm Sup_edificada_sn" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_edificada_sn" class="vmm Sup_edificada_sn" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Superficie Edificada BN</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Sup_edificada_bn" class="vmm Sup_edificada_bn" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Sup_edificada_bn" class="vmm Sup_edificada_bn" onblur="blurChange(this, 1)" />
+                        </div>
+                        <div class="cflnom">Cantidad de Pisos</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Cant_pisos" class="vmm Cant_pisos" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Cant_pisos" class="vmm Cant_pisos" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-3">FORM 3</div>
+                <div class="pfl Prop-4">
+                    <div class="cfl">
+                        <div class="cflnom">Electrico TE1:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Electrico_te1" class="electrico_te1-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Electrico_te1" class="electrico_te1-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Electrico_te1" class="electrico_te1-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Dotacion AP:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_ap" class="dotacion_ap-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_ap" class="dotacion_ap-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_ap" class="dotacion_ap-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Dotacion Alcance:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_alcance" class="dotacion_alcance-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_alcance" class="dotacion_alcance-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Dotacion_alcance" class="dotacion_alcance-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Instalacion Ascensor:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Instalacion_ascensor" class="instalacion_ascensor-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Instalacion_ascensor" class="instalacion_ascensor-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Instalacion_ascensor" class="instalacion_ascensor-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Te1 Ascensor:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Te1_ascensor" class="te1_ascensor-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Te1_ascensor" class="te1_ascensor-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Te1_ascensor" class="te1_ascensor-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Certificado Ascensor:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Certificado_ascensor" class="certificado_ascensor-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Certificado_ascensor" class="certificado_ascensor-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Certificado_ascensor" class="certificado_ascensor-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Clima:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Clima" class="clima-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Clima" class="clima-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Clima" class="clima-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Seguridad Incendio:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Seguridad_incendio" class="seguridad_incendio-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Seguridad_incendio" class="seguridad_incendio-2" value="2"><div class="nomcheck">No</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Seguridad_incendio" class="seguridad_incendio-2" value="3"><div class="nomcheck">No Aplica</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-5">
+                    <div class="cfl">
+                        <div class="cflnom">Serie:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_serie" class="fiscal_serie-1" value="1"><div class="nomcheck">Agricola</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_serie" class="fiscal_serie-2" value="2"><div class="nomcheck">No Agricola</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Destino:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-1" value="1"><div class="nomcheck">Comercial</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-2" value="2"><div class="nomcheck">Industrial</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-3" value="3"><div class="nomcheck">Habitacional</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-4" value="4"><div class="nomcheck">Educacional</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-5" value="5"><div class="nomcheck">Salud</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_destino" class="fiscal_destino-6" value="6"><div class="nomcheck">Otro</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Exento:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_exento" class="fiscal_exento-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Fiscal_exento" class="fiscal_exento-2" value="2"><div class="nomcheck">No</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-6">
+                    <div class="cfl">
+                        <div class="cflnom">Valor Terreno</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_terreno" class="vmm Valor_terreno" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_terreno" class="vmm Valor_terreno" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Valor Edificación</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_edificacion" class="vmm Valor_edificacion" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_edificacion" class="vmm Valor_edificacion" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Valor Obras Complementarias</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_obras_complementarias" class="vmm Valor_obras_complementarias" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_obras_complementarias" class="vmm Valor_obras_complementarias" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Valor Total</div>
+                        <div class="cflops clearfix">
+                            <input type="text" id="Valor_total" class="vmm Valor_total" onblur="blurChange(this, 0)" />
+                            <input type="text" id="Valor_total" class="vmm Valor_total" onblur="blurChange(this, 1)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-7">
+                    <div class="cfl">
+                        <div class="cflnom">Certificado Informaciones Previas:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Cert_info_previas" class="cert_info_previas-1" value="1"><div class="nomcheck">Si</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Cert_info_previas" class="cert_info_previas-2" value="2"><div class="nomcheck">No</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Tipo de Instrumento:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-1" value="1"><div class="nomcheck">Plan Regulador Comunal</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-2" value="2"><div class="nomcheck">Plan Regulador Intercomunal</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-2" value="3"><div class="nomcheck">Plan Regulador Metropolitano</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Tipo_instrumento" class="tipo_instrumento-2" value="4"><div class="nomcheck">Otro</div></div>
+                        </div>
+                    </div>
+                    <div class="cfl">
+                        <div class="cflnom">Destino:</div>
+                        <div class="cflops">
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Normativo_destino" class="normativo_destino-1" value="1"><div class="nomcheck">Urbano</div></div>
+                            <div class="SePropCheck clearfix"><input type="checkbox" onchange="handleChange(this)" id="Normativo_destino" class="normativo_destino-2" value="2"><div class="nomcheck">Rural</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pfl Prop-8">FORM 8</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign">
+                <li><a title="Descargar" id="downexcel" class="icn dow" href="/descargas/cotizacion.pdf" download></a></li>
+            </ul>
+        </div>
+        <ul class='lu listpropbusqueda'></ul>
+    </div>
+</div>
+<br />
+<br />
