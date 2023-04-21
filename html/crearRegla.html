@@ -1,0 +1,341 @@
+<script>
+    document.getElementById('tipo').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('valor_exacto')[0].style.display = "block";
+        }
+        if (this.value == 2){
+            document.getElementsByClassName('valor_expira')[0].style.display = "block";
+        }
+    })
+    document.getElementById('pagina').addEventListener('change', function() {
+        allnone();
+        var tipo = document.getElementById('tipo').value;
+        if (this.value == 1){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina1a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina1b')[0].style.display = "block";
+            }
+        }else if(this.value == 2){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina2a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina2b')[0].style.display = "block";
+            }
+        }else if(this.value == 3){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina3a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina3b')[0].style.display = "block";
+            }
+        }else if(this.value == 4){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina4a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina4b')[0].style.display = "block";
+            }
+        }else if(this.value == 5){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina5a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina5b')[0].style.display = "block";
+            }
+        }else if(this.value == 6){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina6a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina6b')[0].style.display = "block";
+            }
+        }else if(this.value == 7){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina7a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina7b')[0].style.display = "block";
+            }
+        }else if(this.value == 8){
+            if (tipo == 1){
+                document.getElementsByClassName('pagina8a')[0].style.display = "block";
+            }
+            if (tipo == 2){
+                document.getElementsByClassName('pagina8b')[0].style.display = "block";
+            }
+        }else{
+            alert("Debe Seleccionar Tipo");
+        }
+    })
+    function allnone(){
+        document.getElementsByClassName("pagina1a")[0].style.display = "none";
+        document.getElementsByClassName("pagina1b")[0].style.display = "none";
+        document.getElementsByClassName("pagina2a")[0].style.display = "none";
+        document.getElementsByClassName("pagina2b")[0].style.display = "none";
+        document.getElementsByClassName("pagina3a")[0].style.display = "none";
+        document.getElementsByClassName("pagina3b")[0].style.display = "none";
+        document.getElementsByClassName("pagina4a")[0].style.display = "none";
+        document.getElementsByClassName("pagina4b")[0].style.display = "none";
+        document.getElementsByClassName("pagina5a")[0].style.display = "none";
+        document.getElementsByClassName("pagina5b")[0].style.display = "none";
+        document.getElementsByClassName("pagina6a")[0].style.display = "none";
+        document.getElementsByClassName("pagina6b")[0].style.display = "none";
+        document.getElementsByClassName("pagina7a")[0].style.display = "none";
+        document.getElementsByClassName("pagina7b")[0].style.display = "none";
+        document.getElementsByClassName("pagina8a")[0].style.display = "none";
+        document.getElementsByClassName("pagina8b")[0].style.display = "none";
+    }
+</script>
+
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Crear Alertas" onclick="backurl()"></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="id_ale" type="hidden" value="{{.FormIdAle}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Nombre:</span>
+                    <input id="nombre" type="text" value="{{.Alertas.ReglasIndex.Nombre}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Tipo:</span>
+                    <select id="tipo">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Tipo 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Tipo 1}}selected{{end}}>Valor Exacto</option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Tipo 2}}selected{{end}}>Archivo Expirado</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Seleccionar Pagina:</span>
+                    <select id="pagina">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Pagina 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Pagina 1}}selected{{end}}>Pagina 1 - Datos Generales</option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Pagina 2}}selected{{end}}>Pagina 2 - Datos Municipales</option>
+                        <option value="3" {{if eq .Alertas.ReglasIndex.Pagina 3}}selected{{end}}>Pagina 3 - Permiso Edificacion</option>
+                        <option value="4" {{if eq .Alertas.ReglasIndex.Pagina 4}}selected{{end}}>Pagina 4 - Situacion Tecnica</option>
+                        <option value="5" {{if eq .Alertas.ReglasIndex.Pagina 5}}selected{{end}}>Pagina 5 - Situacion Legal</option>
+                        <option value="6" {{if eq .Alertas.ReglasIndex.Pagina 6}}selected{{end}}>Pagina 6 - Situacion Fiscal</option>
+                        <option value="7" {{if eq .Alertas.ReglasIndex.Pagina 7}}selected{{end}}>Pagina 7 - Avaluo Comercial</option>
+                        <option value="8" {{if eq .Alertas.ReglasIndex.Pagina 8}}selected{{end}}>Pagina 8 - Normativo</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+
+
+                <label class="pagina1a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 1)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo11">
+                        <option value="" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar1</option>
+                        <option value="Dominio" {{if eq .Alertas.ReglasIndex.Campo "Dominio"}}selected{{end}}>Dominio</option>
+                        <option value="Dominio2" {{if eq .Alertas.ReglasIndex.Campo "Dominio2"}}selected{{end}}>Dominio2</option>
+                        <option value="Atencion_publico" {{if eq .Alertas.ReglasIndex.Campo "Atencion_publico"}}selected{{end}}>Atencion Público</option>
+                        <option value="Copropiedad" {{if eq .Alertas.ReglasIndex.Campo "Copropiedad"}}selected{{end}}>Copropiedad</option>
+                        <option value="Destino" {{if eq .Alertas.ReglasIndex.Campo "Destino"}}selected{{end}}>Destino</option>
+                        <option value="Detalle_destino" {{if eq .Alertas.ReglasIndex.Campo "Detalle_destino"}}selected{{end}}>Detalle Destino</option>
+                        <option value="Detalle_destino_otro" {{if eq .Alertas.ReglasIndex.Campo "Detalle_destino_otro"}}selected{{end}}>Especificar Detalle Destino</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina2a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 2)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo21">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina3a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 3)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo31">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina4a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 4)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo41">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina5a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 5)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo51">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar5</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina6a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 6)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo61">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar6</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina7a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 7)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo71">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar7</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina8a" {{if and (eq .Alertas.ReglasIndex.Tipo 1) (eq .Alertas.ReglasIndex.Pagina 8)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo81">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar8</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+
+                <label class="pagina1b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 1)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo12">
+                        <option value="" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar1</option>
+                        <option value="Dominio" {{if eq .Alertas.ReglasIndex.Campo "Dominio"}}selected{{end}}>Dominio</option>
+                        <option value="Dominio2" {{if eq .Alertas.ReglasIndex.Campo "Dominio2"}}selected{{end}}>Dominio2</option>
+                        <option value="Atencion_publico" {{if eq .Alertas.ReglasIndex.Campo "Atencion_publico"}}selected{{end}}>Atencion Público</option>
+                        <option value="Copropiedad" {{if eq .Alertas.ReglasIndex.Campo "Copropiedad"}}selected{{end}}>Copropiedad</option>
+                        <option value="Destino" {{if eq .Alertas.ReglasIndex.Campo "Destino"}}selected{{end}}>Destino</option>
+                        <option value="Detalle_destino" {{if eq .Alertas.ReglasIndex.Campo "Detalle_destino"}}selected{{end}}>Detalle Destino</option>
+                        <option value="Detalle_destino_otro" {{if eq .Alertas.ReglasIndex.Campo "Detalle_destino_otro"}}selected{{end}}>Especificar Detalle Destino</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina2b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 2)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo22">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina3b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 3)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo32">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina4b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 4)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo42">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina5b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 5)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo52">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar5</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina6b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 6)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo62">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar6</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina7b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 7)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo72">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar7</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label class="pagina8b" {{if and (eq .Alertas.ReglasIndex.Tipo 2) (eq .Alertas.ReglasIndex.Pagina 8)}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Campos:</span>
+                    <select id="campo82">
+                        <option value="0" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}>Seleccionar8</option>
+                        <option value="1" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                        <option value="2" {{if eq .Alertas.ReglasIndex.Campo ""}}selected{{end}}></option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+
+
+                <label class="valor_exacto" {{if eq .Alertas.ReglasIndex.Tipo 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Valor Exacto:</span>
+                    <input id="valor1" type="text" value="{{.Alertas.ReglasIndex.Valor}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label class="valor_expira" {{if eq .Alertas.ReglasIndex.Tipo 2}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <span>Valor Expira en dias:</span>
+                    <input id="valor2" type="text" value="{{.Alertas.ReglasIndex.Valor}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+{{if gt (len .Alertas.Reglas) 0}}
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <ul class='lu'>
+            {{range .Alertas.Reglas}}
+            <li class="u" rel="{{.Id_alr}}">                
+                <div class="no">{{.Nombre}}</div>
+                <div class="btns clearfix valign">
+                    <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', {{.Id_alr}}, '{{$.DelObj}}', '{{.Nombre}}')"></a>
+                    <a title="Modificar" class="icn mod" onclick="navlink('{{$.PageMod}}?id={{.Id_alr}}&id_ale={{$.FormIdAle}}')"></a>
+                </div>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+</div>
+{{end}}
+<br />
+<br />
