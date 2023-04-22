@@ -1,0 +1,256 @@
+<script>
+
+    document.getElementById('recepcion_definitiva').addEventListener('change', function() {
+        if (this.value == 1) {
+            document.getElementsByClassName('recepcion_total')[0].style.display = "block"
+            document.getElementsByClassName('recepcion_parcial')[0].style.display = "none"
+        } else if (this.value == 2) {
+            document.getElementsByClassName('recepcion_parcial')[0].style.display = "block"
+            document.getElementsByClassName('recepcion_total')[0].style.display = "none"
+        } else {
+            document.getElementsByClassName('recepcion_parcial')[0].style.display = "none"
+            document.getElementsByClassName('recepcion_total')[0].style.display = "none"
+        }
+    })
+    document.getElementById('posee_permiso_edificacion').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('posee_permiso_edificacion')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('posee_permiso_edificacion')[0].style.display = "none"
+        }
+    })
+    document.getElementById('recepcion_parcial_acoge').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('recepcion_parcial_acoge')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('recepcion_parcial_acoge')[0].style.display = "none"
+        }
+    })
+    document.getElementById('recepcion_total_acoge').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('recepcion_total_acoge')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('recepcion_total_acoge')[0].style.display = "none"
+        }
+    })
+    document.getElementById('tipo_permiso_edificacion').addEventListener('change', function() {
+        if (this.value == 7){
+            document.getElementsByClassName('especificar')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('especificar')[0].style.display = "none"
+        }
+    })
+
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Datos Municipales" onclick='navlink("/pages/crearPropiedad?id={{.FormId}}")'></a>
+        <a class="back icn mdl" title="Detalle Propiedad" onclick='navlink("/pages/detallePropiedad?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Situación Técnica" onclick='navlink("/pages/crearPropiedad3?id={{.FormId}}")'></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="id_rec" type="hidden" value="{{.FormIdRec}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Superficie Terreno:</span>
+                    <input id="sup_terreno" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Sup_Terreno}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Posee Permiso de Edificación:</span>
+                    <select id="posee_permiso_edificacion">
+                        <option value="0" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Posee_Permiso_Edificacion 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Posee_Permiso_Edificacion 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Posee_Permiso_Edificacion 2}}selected{{end}}>No</option>
+                        <option value="3" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Posee_Permiso_Edificacion 3}}selected{{end}}>No Aplica</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <div class="posee_permiso_edificacion" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Posee_Permiso_Edificacion 1}}style="display:block"{{else}}style="display:none"{{end}}>
+                    <label>
+                        <span>Tipo de Permiso Edificación:</span>
+                        <select id="tipo_permiso_edificacion">
+                            <option value="0" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 0}}selected{{end}}>Seleccionar</option>
+                            <option value="1" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 1}}selected{{end}}>Obra Nueva</option>
+                            <option value="2" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 2}}selected{{end}}>Obra menor alteración (Menor a 100m2)</option>
+                            <option value="3" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 3}}selected{{end}}>Obra menor alteración (Mayor a 100m2)</option>
+                            <option value="4" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 4}}selected{{end}}>Modificación de Proyecto</option>
+                            <option value="5" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 5}}selected{{end}}>Alteración</option>
+                            <option value="6" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 6}}selected{{end}}>Recontrucción</option>
+                            <option value="7" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 7}}selected{{end}}>Otro Especificar</option>
+                        </select>
+                        <div class="mensaje"></div>
+                    </label>
+                    <label class="especificar" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Tipo_Permiso_Edificacion 7}}style="display:block"{{else}}style="display:none"{{end}}>
+                        <span>Especificar Permiso:</span>
+                        <input id="especificar_tipo_permiso_edificacion" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Especificar_Tipo_Permiso_Edificacion}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Numero de Permiso:</span>
+                        <input id="numero_permiso_edificacion" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Numero_Permiso}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Fecha:</span>
+                        <input id="fecha_permiso" type="date" value="{{.CamposPropiedades.PermisosEdificacionIndex.Fecha_Permiso}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Cantidad de Pisos Sobre Nivel:</span>
+                        <input id="cant_pisos_sobre_nivel" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Cant_Pisos_Sobre_Nivel}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Cantidad de Pisos Bajo Nivel:</span>
+                        <input id="cant_pisos_bajo_nivel" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Cant_Pisos_Bajo_Nivel}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Superficie Edificada Sobre Nivel:</span>
+                        <input id="superficie_edificada_sobre_nivel" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Sup_Edificada_Sobre_Nivel}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Superficie Edificada Bajo Nivel:</span>
+                        <input id="superficie_edificada_bajo_nivel" type="text" value="{{.CamposPropiedades.PermisosEdificacionIndex.Sup_Edificada_Bajo_Nivel}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Acogido a Artículos Especiales Transitorios:</span>
+                        <select id="aco_art_esp_transitorio">
+                            <option value="0" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Aco_Art_Esp_Transitorio 0}}selected{{end}}>No</option>
+                            <option value="1" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Aco_Art_Esp_Transitorio 1}}selected{{end}}>Art. 121° OGUC</option>
+                            <option value="2" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Aco_Art_Esp_Transitorio 2}}selected{{end}}>Art. 122° OGUC</option>
+                            <option value="3" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Aco_Art_Esp_Transitorio 3}}selected{{end}}>Art. 123° OGUC</option>
+                            <option value="4" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Aco_Art_Esp_Transitorio 4}}selected{{end}}>Art. 124° OGUC</option>
+                        </select>
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Permiso:</span>
+                        <input id="permiso" type="file" style="margin-top:0px;margin-bottom:0px" require="" placeholder="" />
+                        <div class="mensaje">{{ range $Tipo, $Archivo := .CamposPropiedades.PermisosEdificacionIndex.Archivos }}{{if eq $Tipo 1 }}{{if eq (len $Archivo) 1}}Tiene 1 Archivo{{end}}{{if gt (len $Archivo) 1}}Tiene {{ len $Archivo }} Archivos{{end}}{{end}}{{end}}</div>
+                    </label>
+                    <label>
+                        <span>Plano:</span>
+                        <input id="plano" type="file" style="margin-top:0px;margin-bottom:0px" require="" placeholder="" />
+                        <div class="mensaje">{{ range $Tipo, $Archivo := .CamposPropiedades.PermisosEdificacionIndex.Archivos }}{{if eq $Tipo 2 }}{{if eq (len $Archivo) 1}}Tiene 1 Archivo{{end}}{{if gt (len $Archivo) 1}}Tiene {{ len $Archivo }} Archivos{{end}}{{end}}{{end}}</div>
+                    </label>
+                    <label class="recepcion">
+                        <span>Recepción Definitiva:</span>
+                        <select id="recepcion_definitiva">
+                            <option value="0" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Recepcion_Definitiva 0}}selected{{end}}>Seleccionar</option>
+                            <option value="3" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Recepcion_Definitiva 3}}selected{{end}}>No Posee</option>
+                            <option value="1" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Recepcion_Definitiva 1}}selected{{end}}>Total</option>
+                            <option value="2" {{if eq .CamposPropiedades.PermisosEdificacionIndex.Recepcion_Definitiva 2}}selected{{end}}>Parcial</option>
+                        </select>
+                        <div class="mensaje"></div>
+                    </label>
+                    <div class="recepcion_total" style="display:none; background: #d7d7d7; padding: 10px; margin: 10px 0px; border: 1px solid #aaa">
+                        <div style="padding-bottom: 10px; font-size: 20px; font-weight: bold;">Recepcion Total</div>
+                        <label>
+                            <span>Documento:</span>
+                            <input id="doc_recepcion_total" type="file" require="" placeholder="" style="margin-top: 0px; margin-bottom: 0px;" />
+                            <div class="mensaje"></div>
+                        </label>
+                        <label>
+                            <span>Fecha:</span>
+                            <input id="fecha_recepcion_total" type="date" value="" require="" placeholder="" />
+                            <div class="mensaje"></div>
+                        </label>
+                        <label>
+                            <span>Indicar si se acoge a Art. 5.2.8. OGUC:</span>
+                            <select id="recepcion_total_acoge">
+                                <option value="0" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionTotalAcoge 0}}selected{{end}}>Seleccionar</option>
+                                <option value="1" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionTotalAcoge 1}}selected{{end}}>Si</option>
+                                <option value="2" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionTotalAcoge 2}}selected{{end}}>No</option>
+                                <option value="3" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionTotalAcoge 3}}selected{{end}}>Si, pero plano esta pendiente</option>
+                            </select>
+                            <div class="mensaje"></div>
+                        </label>
+                        <label class="recepcion_total_acoge" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionTotalAcoge 7}}style="display:block"{{else}}style="display:none"{{end}}>
+                            <span>Documento:</span>
+                            <input id="doc2_recepcion_total" type="file" require="" placeholder="" style="margin-top: 0px; margin-bottom: 0px;" />
+                            <div class="mensaje"></div>
+                        </label>
+                    </div>
+                    <div class="recepcion_parcial" style="display:none; background: #d7d7d7; padding: 10px; margin: 10px 0px; border: 1px solid #aaa">
+                        <div style="padding-bottom: 10px; font-size: 20px; font-weight: bold;">Recepcion Parcial</div>
+                        <label>
+                            <span>Documento:</span>
+                            <input id="doc_recepcion_parcial" type="file" require="" placeholder="" style="margin-top: 0px; margin-bottom: 0px;" />
+                            <div class="mensaje"></div>
+                        </label>
+                        <label>
+                            <span>Fecha:</span>
+                            <input id="fecha_recepcion_parcial" type="date" value="" require="" placeholder="" />
+                            <div class="mensaje"></div>
+                        </label>
+                        <label>
+                            <span>Indicar si se acoge a Art. 5.2.8. OGUC:</span>
+                            <select id="recepcion_parcial_acoge">
+                                <option value="0" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionParcialAcoge 0}}selected{{end}}>Seleccionar</option>
+                                <option value="1" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionParcialAcoge 1}}selected{{end}}>Si</option>
+                                <option value="2" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionParcialAcoge 2}}selected{{end}}>No</option>
+                                <option value="3" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionParcialAcoge 3}}selected{{end}}>Si, pero plano esta pendiente</option>
+                            </select>
+                            <div class="mensaje"></div>
+                        </label>
+                        <label class="recepcion_parcial_acoge" {{if eq .CamposPropiedades.PermisosEdificacionIndex.RecepcionParcialAcoge 7}}style="display:block"{{else}}style="display:none"{{end}}>
+                            <span>Documento:</span>
+                            <input id="doc2_recepcion_parcial" type="file" require="" placeholder="" style="margin-top: 0px; margin-bottom: 0px;" />
+                            <div class="mensaje"></div>
+                        </label>
+                    </div>
+                    <label>
+                        <span>Siguiente Accion:</span>
+                        <select id="siguiente_accion">
+                            <option value="0">Continuar formulario</option>
+                            <option value="1">Agregar mas permisos de edificación</option>
+                        </select>
+                        <div class="mensaje"></div>
+                    </label>
+                </div>
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+{{if .Lista}}
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <ul class='lu'>
+            {{range .Lista}}
+            <li class="u" rel="{{.Id}}">                
+                <div class="no">{{.Nombre}}</div>
+                <div class="btns clearfix valign">
+                    <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', '{{$.FormId}}/{{.Id}}', '{{$.DelObj}}', '{{.Nombre}}')"></a>
+                    <a title="Modificar" class="icn mod" onclick="navlink('{{$.PageMod}}?id={{$.FormId}}&id_rec={{.Id}}')"></a>
+                </div>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+</div>
+{{end}}

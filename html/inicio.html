@@ -1,0 +1,80 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8">
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        <link rel="stylesheet" href="css/sweetalert.css" type="text/css" media="all">
+        <link rel="stylesheet" href="css/admin.css" type="text/css" media="all">
+        <link rel="stylesheet" href="css/reset.css" type="text/css" media="all">
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script type="text/javascript" src="js/sweetalert.min.js"></script>
+        <script type="text/javascript" src="js/base_1.js"></script>
+        <script>
+            var id_cotizacion = 1;
+        </script>
+    </head>
+    <body onload="navlink('/pages/{{.Function}}')">
+        <div class='c'>
+            <div class='t'>
+                <div class='t2'><img src="img/logo.png" alt="" /></div>
+                <!--<a class='t3 va' href="/salir"></a>-->
+                <div class='t4 va' onclick='show_cart()'></div>
+                <div class='t5 va' onclick='show_cart()'>0</div>
+            </div>
+            <div class='l'>
+                {{if .Admin}}
+                <div class='l1'>
+                    <div class='l2 xc1'></div>
+                    <div class='l3'>Administrador</div>
+                </div>
+                <div class='l4' onclick='navlink("/pages/crearEmpresa")'>Crear Empresa</div>
+                <div class='l4' onclick='navlink("/pages/crearAlerta")'>Crear Alerta</div>
+                <div class='l4' onclick='navlink("/pages/AdminCotizacion")'>Cotizaciones</div>
+                {{end}}
+                {{if .Idemp}}
+                <div class='l1'>
+                    <div class='l2 xc2'></div>
+                    <div class='l3'>Inicio</div>
+                </div>
+                <div class='l4' onclick='navlink("/pages/inicioEmpresa")'>Inicio</div>
+                <div class='l4' onclick='navlink("/pages/misCotizaciones")'>Cotizaciones</div>
+                <div class='l1'>
+                    <div class='l2 xc3'></div>
+                    <div class='l3'>Propiedades</div>
+                </div>
+                <div class='l4' onclick='navlink("/pages/crearPropiedad")'>Crear</div>
+                <div class='l4' onclick='navlink("/pages/buscarPropiedades")'>Buscar</div>
+                <div class='l1'>
+                    <div class='l2 xc3'></div>
+                    <div class='l3'>Usuarios</div>
+                </div>
+                <div class='l4' onclick='navlink("/pages/crearUsuarios")'>Crear Usuarios</div>
+                <div class='l1'>
+                    <div class='l2 xc3'></div>
+                    <div class='l3'>Configuracion</div>
+                </div>
+                <div class='l4'><a href="/salir" style="color: #fff; text-decoration: none;">Salir</a></div>
+                {{end}}
+            </div>
+            <div class='h'></div>
+            <div class='cart'>
+                <div class='cont_cart'>
+                    <div class="titulo_cart clearfix">
+                        <div onclick="show_cart()"></div>
+                        <div>Cotizador</div>
+                        <div></div>
+                    </div>
+                    <div class="data_cart clearfix">
+                        <div class="list_cart"></div>
+                    </div>
+                    <div class="accion_cart">
+                        <div class="cart_enviar">Enviar</div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIXenuYoczpO6oh4uzeOj11b7Nvg8zrFM&libraries=places&v=weekly" async ></script>
+    </body>
+</html>
+

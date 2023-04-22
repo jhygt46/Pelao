@@ -1,0 +1,134 @@
+
+<script>
+
+    document.getElementById('contrato_arriendo').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('contrato_arriendo')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('contrato_arriendo')[0].style.display = "none"
+        }
+    })
+    document.getElementById('contrato_subarriendo').addEventListener('change', function() {
+        if (this.value == 1){
+            document.getElementsByClassName('contrato_subarriendo')[0].style.display = "block"
+        }else{
+            document.getElementsByClassName('contrato_subarriendo')[0].style.display = "none"
+        }
+    })
+
+</script>
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Situación Técnica" onclick='navlink("/pages/crearPropiedad3?id={{.FormId}}")'></a>
+        <a class="back icn mdl" title="Detalle Propiedad" onclick='navlink("/pages/detallePropiedad?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Situación Legal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Tasacion Valor Comercial:</span>
+                    <input id="tasacion_valor_comercial" type="text" value="{{.CamposPropiedades.Tasacion_valor_comercial}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Año Tasacion:</span>
+                    <input id="ano_tasacion" type="number" min="1960" max="2030" step="1" value="{{.CamposPropiedades.Ano_tasacion}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Posee Contrato de Arriendo:</span>
+                    <select id="contrato_arriendo">
+                        <option value="0" {{if eq .CamposPropiedades.Contrato_arriendo 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CamposPropiedades.Contrato_arriendo 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .CamposPropiedades.Contrato_arriendo 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+
+                <div class="contrato_arriendo" style="{{if eq .CamposPropiedades.Contrato_arriendo 1}}display:block{{else}}display:none{{end}};background: #d7d7d7; padding: 10px; margin: 10px 0px; border: 1px solid #aaa">
+                    <div style="padding-bottom: 10px; font-size: 20px; font-weight: bold;">Contrato de Arriendo</div>
+                    <input id="id_doc_09" type="hidden" value="{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{$Archivo.Id_arc}}{{end}}{{end}}" />
+                    <label>
+                        <span>Valor Arriendo en Pesos:</span>
+                        <input id="valor_arriendo" type="text" value="{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{$Archivo.Valor_arriendo}}{{end}}{{end}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Documento:</span>
+                        <input id="doc_arriendo" type="file" require="" placeholder="" />
+                        <div class="mensaje">{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{$Archivo.Nombre}}{{end}}{{end}}</div>
+                    </label>
+                    <label>
+                        <span>Vencimiento:</span>
+                        <input id="vencimiento_arriendo" type="date" value="{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{$Archivo.Fecha}}{{end}}{{end}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Renovacion Automatica:</span>
+                        <select id="renovacion_automatica">
+                            <option value="0" {{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{if eq $Archivo.Renovacion_auto 0}}selected{{end}}{{end}}{{end}}>Seleccionar</option>
+                            <option value="1" {{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{if eq $Archivo.Renovacion_auto 1}}selected{{end}}{{end}}{{end}}>Si</option>
+                            <option value="2" {{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 9 }}{{if eq $Archivo.Renovacion_auto 2}}selected{{end}}{{end}}{{end}}>No</option>
+                        </select>
+                        <div class="mensaje"></div>
+                    </label>
+                </div>
+
+                <label>
+                    <span>Posee Contrato de Subarriendo:</span>
+                    <select id="contrato_subarriendo">
+                        <option value="0" {{if eq .CamposPropiedades.Contrato_subarriendo 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CamposPropiedades.Contrato_subarriendo 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .CamposPropiedades.Contrato_subarriendo 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+
+                <div class="contrato_subarriendo" style="{{if eq .CamposPropiedades.Contrato_subarriendo 1}}display:block{{else}}display:none{{end}};background: #d7d7d7; padding: 10px; margin: 10px 0px; border: 1px solid #aaa">
+                    <div style="padding-bottom: 10px; font-size: 20px; font-weight: bold;">Contrato de Subarriendo</div>
+                    <input id="id_doc_10" type="hidden" value="{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{$Archivo.Id_arc}}{{end}}{{end}}" />
+                    <label>
+                        <span>Valor Arriendo en Pesos:</span>
+                        <input id="valor_subarriendo" type="text" value="{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{$Archivo.Valor_arriendo}}{{end}}{{end}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Documento:</span>
+                        <input id="doc_subarriendo" type="file" require="" placeholder="" />
+                        <div class="mensaje">{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{$Archivo.Nombre}}{{end}}{{end}}</div>
+                    </label>
+                    <label>
+                        <span>Vencimiento:</span>
+                        <input id="vencimiento_subarriendo" type="date" value="{{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{$Archivo.Fecha}}{{end}}{{end}}" require="" placeholder="" />
+                        <div class="mensaje"></div>
+                    </label>
+                    <label>
+                        <span>Renovacion Automatica:</span>
+                        <select id="renovacion_automaticasub">
+                            <option value="0" {{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{if eq $Archivo.Renovacion_auto 0}}selected{{end}}{{end}}{{end}}>Seleccionar</option>
+                            <option value="1" {{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{if eq $Archivo.Renovacion_auto 1}}selected{{end}}{{end}}{{end}}>Si</option>
+                            <option value="2" {{ range $Tipo, $Archivo := .CamposPropiedades.UltimosArchivos }}{{if eq $Tipo 10 }}{{if eq $Archivo.Renovacion_auto 2}}selected{{end}}{{end}}{{end}}>No</option>
+                        </select>
+                        <div class="mensaje"></div>
+                    </label>
+                </div>
+
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
