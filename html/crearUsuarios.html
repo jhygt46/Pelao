@@ -1,0 +1,133 @@
+<script>
+
+    function checkall(that){
+        var parent = that.parentNode.parentNode
+        for (let i = 1; i < parent.children.length; i++) {
+            parent.children[i].children[0].checked = that.checked
+        }
+    }
+
+</script>
+
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Mis Cotizaciones" onclick="backurl()"></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Nombre:</span>
+                    <input id="nombre" type="text" value="{{.FormNombre}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Contraseña:</span>
+                    <input id="pass" type="text" value="" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <div class="checkbox">
+                    <div class="ctitulo">Permisos</div>
+                    <div style="margin-bottom: 5px"> 
+                        <label class="cops" style="background: #ccc">
+                            <input type="checkbox" onchange="checkall(this)" />
+                            <div>Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p0" type="checkbox" {{if .Permisos.P0}}checked="checked"{{end}} />
+                            <div>Crear Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p1" type="checkbox" {{if .Permisos.P1}}checked="checked"{{end}}  />
+                            <div>Modificar Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p2" type="checkbox" {{if .Permisos.P2}}checked="checked"{{end}}  />
+                            <div>Permiso 2</div>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 5px"> 
+                        <label class="cops" style="background: #ccc">
+                            <input type="checkbox" onchange="checkall(this)" />
+                            <div>Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p0" type="checkbox" {{if .Permisos.P3}}checked="checked"{{end}} />
+                            <div>Crear Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p1" type="checkbox" {{if .Permisos.P4}}checked="checked"{{end}}  />
+                            <div>Modificar Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p2" type="checkbox" {{if .Permisos.P5}}checked="checked"{{end}}  />
+                            <div>Permiso 2</div>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 5px"> 
+                        <label class="cops" style="background: #ccc">
+                            <input type="checkbox" onchange="checkall(this)" />
+                            <div>Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p0" type="checkbox" {{if .Permisos.P6}}checked="checked"{{end}} />
+                            <div>Crear Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p1" type="checkbox" {{if .Permisos.P7}}checked="checked"{{end}}  />
+                            <div>Modificar Propiedades</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p2" type="checkbox" {{if .Permisos.P8}}checked="checked"{{end}}  />
+                            <div>Permiso 2</div>
+                        </label>
+                        <label class="cops">
+                            <input id="p2" type="checkbox" {{if .Permisos.P9}}checked="checked"{{end}}  />
+                            <div>Permiso 2</div>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+{{if .Lista}}
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <ul class='lu'>
+            {{range .Lista}}
+            <li class="u" rel="{{.Id}}">                
+                <div class="no">{{.Nombre}}</div>
+                <div class="btns clearfix valign">
+                    <a title="Eliminar" class="icn del" onclick="eliminar('{{$.DelAccion}}', {{.Id}}, '{{$.DelObj}}', '{{.Nombre}}')"></a>
+                    <a title="Modificar" class="icn mod" onclick="navlink('{{$.PageMod}}?id={{.Id}}')"></a>
+                    <a title="Modificar" class="icn ent" onclick="navlink('/pages/inicioEmpresa?id={{.Id}}')"></a>
+                </div>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+</div>
+{{end}}
+<br />
+<br />
