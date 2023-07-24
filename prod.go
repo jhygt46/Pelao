@@ -496,7 +496,6 @@ func main() {
 		//fasthttp.ListenAndServe(port, r.Handler)
 
 		// DESPUES
-
 		go func() {
 			fasthttp.ListenAndServe(":80", redirectHTTP)
 		}()

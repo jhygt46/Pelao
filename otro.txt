@@ -1,0 +1,296 @@
+//CREATE DATABASE pelao CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
+//pass google: Gt5H8s2W1mKS6
+//pass mysql: Hy68d5sMD1w3M6Tf4
+//proyect id: redigo-393623
+//clave api: AIzaSyBau4lBpvFATEv6-yFfh_4_V8c7xGCZn3k
+func SendEmail(code string) {
+
+	region := "us-east-1"
+
+	emailTemplate := GenerateSESTemplate(code)
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	service := ses.New(sess)
+	_, err = service.SendEmail(emailTemplate)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			log.Fatal(aerr.Error())
+		} else {
+			log.Fatal(err)
+		}
+	}
+}
+func SendEmail2() {
+
+	region := "us-east-1"
+	svc := ses.New(session.New(&aws.Config{Region: aws.String(region)}))
+	input := &ses.SendRawEmailInput{
+		FromArn: aws.String(""),
+		RawMessage: &ses.RawMessage{
+			Data: []byte("From: diego.gomez.bezmalinovic@gmail.com\\nTo: diego.gomez.bezmalinovic@gmail.com\\nSubject: Test email (contains an attachment)\\nMIME-Version: 1.0\\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\\n\\n--NextPart\\nContent-Type: text/plain\\n\\nThis is the message body.\\n\\n--NextPart\\nContent-Type: text/plain;\\nContent-Disposition: attachment; filename=\"attachment.txt\"\\n\\nThis is the text in the attachment.\\n\\n--NextPart--"),
+		},
+		ReturnPathArn: aws.String(""),
+		Source:        aws.String(""),
+		SourceArn:     aws.String(""),
+	}
+
+	result, err := svc.SendRawEmail(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case ses.ErrCodeMessageRejected:
+				fmt.Println(ses.ErrCodeMessageRejected, aerr.Error())
+			case ses.ErrCodeMailFromDomainNotVerifiedException:
+				fmt.Println(ses.ErrCodeMailFromDomainNotVerifiedException, aerr.Error())
+			case ses.ErrCodeConfigurationSetDoesNotExistException:
+				fmt.Println(ses.ErrCodeConfigurationSetDoesNotExistException, aerr.Error())
+			case ses.ErrCodeConfigurationSetSendingPausedException:
+				fmt.Println(ses.ErrCodeConfigurationSetSendingPausedException, aerr.Error())
+			case ses.ErrCodeAccountSendingPausedException:
+				fmt.Println(ses.ErrCodeAccountSendingPausedException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
+	fmt.Println(result)
+}
+func getHTMLTemplate(code string) string {
+	var templateBuffer bytes.Buffer
+	data := EmailData{
+		Code: code,
+	}
+	htmlData, err := ioutil.ReadFile("email/recuperar.html")
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+	return templateBuffer.String()
+}
+func GenerateSESTemplate(code string) (template *ses.SendEmailInput) {
+
+	sender := "diego.gomez.bezmalinovic@gmail.com"
+	receiver := "diego.gomez.bezmalinovic@gmail.com"
+	html := getHTMLTemplate(code)
+	title := "Nuevo Usuarios"
+	template = &ses.SendEmailInput{
+		Destination: &ses.Destination{
+			CcAddresses: []*string{},
+			ToAddresses: []*string{
+				aws.String(receiver),
+			},
+		},
+		Message: &ses.Message{
+			Body: &ses.Body{
+				Html: &ses.Content{
+					Charset: aws.String("utf-8"),
+					Data:    aws.String(html),
+				},
+			},
+			Subject: &ses.Content{
+				Charset: aws.String("utf-8"),
+				Data:    aws.String(title),
+			},
+		},
+		Source: aws.String(sender),
+	}
+	return
+}
+LIMITE PREDIAL
+
+
+func GetAllAlert(id_ale int) {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+
+	cn := 0
+	res, err := db.Query("SELECT id_pro FROM propiedades WHERE eliminado = ?", cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_pro int
+		err := res.Scan(&id_pro)
+		if err != nil {
+			log.Fatal(err)
+		}
+		GetAlertasId(db, id_pro, id_ale)
+	}
+}
+func GetSimpleAlert(id_pro int, pagina int) {
+
+	db, err := GetMySQLDB()
+	defer db.Close()
+	ErrorCheck(err)
+	GetPaginaAlerts(db, id_pro, pagina)
+}
+func GetAlertasId(db *sql.DB, id_pro int, id_ale int) {
+
+	alertas := []Alerta{}
+	id := 0
+
+	cn := 0
+	res, err := db.Query("SELECT t1.id_ale as id_ale, t1.alerta as alerta, t1.notificacion as notificacion, t2.campo as campo, t2.valor as valor FROM alertas t1, alerta_regla t2 WHERE t1.id_ale = ? AND t1.id_ale=t2.id_ale AND t1.eliminado = ? AND t2.eliminado = ?", id_ale, cn, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_ale int
+		var alerta int
+		var notificacion int
+		var campo string
+		var valor string
+		err := res.Scan(&id_ale, &alerta, &notificacion, &campo, &valor)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if id != id_ale {
+			id = id_ale
+			alertas = append(alertas, Alerta{Id_ale: id_ale, Alerta: alerta, Notificacion: notificacion, Valores: []string{}, Campos: []string{}})
+		}
+		alertas[len(alertas)-1].Campos = append(alertas[len(alertas)-1].Campos, campo)
+		alertas[len(alertas)-1].Valores = append(alertas[len(alertas)-1].Valores, valor)
+	}
+
+	for i := 0; i < len(alertas); i++ {
+		count1 := len(alertas[i].Campos)
+		count2 := 0
+		for j := 0; j < count1; j++ {
+			if GetCampoPropiedad(db, alertas[i].Campos[j], alertas[i].Valores[j], id_pro) {
+				count2++
+			}
+		}
+		if count1 == count2 {
+			InsertAlert(db, id_pro, alertas[i].Id_ale)
+		} else {
+			DeleteAlert(db, id_pro, alertas[i].Id_ale)
+		}
+	}
+}
+func GetPaginaAlerts(db *sql.DB, id_pro int, pagina int) {
+
+	cn := 0
+	res, err := db.Query("SELECT DISTINCT(t1.id_ale) as id_ale FROM alertas t1, alerta_regla t2 WHERE t2.pagina = ? AND t1.id_ale=t2.id_ale AND t1.eliminado = ? AND t2.eliminado = ?", pagina, cn, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_ale int
+		err := res.Scan(&id_ale)
+		if err != nil {
+			log.Fatal(err)
+		}
+		GetAlertasPagina(db, id_pro, id_ale)
+	}
+}
+func GetAlertasPagina(db *sql.DB, id_pro int, id_ale int) {
+
+	alertas := []Alerta{}
+	id := 0
+
+	cn := 0
+	res, err := db.Query("SELECT t1.id_ale as id_ale, t1.alerta as alerta, t1.notificacion as notificacion, t2.campo as campo, t2.valor as valor FROM alertas t1, alerta_regla t2 WHERE t1.id_ale = ? AND t1.id_ale=t2.id_ale AND t1.eliminado = ? AND t2.eliminado = ?", id_ale, cn, cn)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		var id_ale int
+		var alerta int
+		var notificacion int
+		var campo string
+		var valor string
+		err := res.Scan(&id_ale, &alerta, &notificacion, &campo, &valor)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if id != id_ale {
+			id = id_ale
+			alertas = append(alertas, Alerta{Id_ale: id_ale, Alerta: alerta, Notificacion: notificacion, Valores: []string{}, Campos: []string{}})
+		}
+		alertas[len(alertas)-1].Campos = append(alertas[len(alertas)-1].Campos, campo)
+		alertas[len(alertas)-1].Valores = append(alertas[len(alertas)-1].Valores, valor)
+	}
+
+	for i := 0; i < len(alertas); i++ {
+		count1 := len(alertas[i].Campos)
+		count2 := 0
+		for j := 0; j < count1; j++ {
+			if GetCampoPropiedad(db, alertas[i].Campos[j], alertas[i].Valores[j], id_pro) {
+				count2++
+			}
+		}
+		if count1 == count2 {
+			InsertAlert(db, id_pro, alertas[i].Id_ale)
+		} else {
+			DeleteAlert(db, id_pro, alertas[i].Id_ale)
+		}
+	}
+}
+func GetCampoPropiedad(db *sql.DB, campo string, valor string, id_pro int) bool {
+
+	res, err := db.Query("SELECT "+campo+" FROM propiedades WHERE id_pro = ?", id_pro)
+	defer res.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if res.Next() {
+		var valor2 string
+		err2 := res.Scan(&valor2)
+		if err != nil {
+			log.Fatal(err2)
+		}
+		if valor == valor2 {
+			return true
+		}
+	}
+	return false
+}
+func AddPass1(id_pro int, pagina int) {
+	insert := true
+	for i := 0; i < len(pass.ListaPropAlerts); i++ {
+		if pass.ListaPropAlerts[i].Id_pro == id_pro && pass.ListaPropAlerts[i].Pagina == pagina {
+			insert = false
+		}
+	}
+	if insert {
+		pass.ListaPropAlerts = append(pass.ListaPropAlerts, ListaPropAlert{Id_pro: id_pro, Pagina: pagina})
+	}
+}
+func AddPass2(id_ale int) {
+	insert := true
+	for i := 0; i < len(pass.ListaPropAlerts); i++ {
+		if pass.ListaNewAlerts[i].Id_ale == id_ale {
+			insert = false
+		}
+	}
+	if insert {
+		pass.ListaNewAlerts = append(pass.ListaNewAlerts, ListaNewAlert{Id_ale: id_ale, Tiempo: time.Now()})
+	}
+}
+func RemovePropAlert(s []ListaPropAlert, i int) []ListaPropAlert {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+func RemoveNewAlert(s []ListaNewAlert, i int) []ListaNewAlert {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
