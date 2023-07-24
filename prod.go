@@ -486,19 +486,24 @@ func main() {
 		r.GET("/video/{name}", Video)
 
 		// ANTES
-		fasthttp.ListenAndServe(port, r.Handler)
+		//fasthttp.ListenAndServe(port, r.Handler)
 
 		// DESPUES
-		//secureMiddleware := secure.New(secure.Options{SSLRedirect: true})
-		//secureHandler := secureMiddleware.Handler(r.Handler)
-		//go func() { log.Fatal(fasthttp.ListenAndServe(":80", secureHandler)) }()
-		//log.Fatal(fasthttp.ListenAndServeTLS(":443", "/etc/letsencrypt/live/www.redigo.cl/fullchain.pem", "/etc/letsencrypt/live/www.redigo.cl/privkey.pem", secureHandler))
+		go func() {
+			fasthttp.ListenAndServe(":80", redirectHTTP)
+		}()
+		server := &fasthttp.Server{Handler: r.Handler}
+		server.ListenAndServeTLS(":443", "/etc/letsencrypt/live/www.redigo.cl/fullchain.pem", "/etc/letsencrypt/live/www.redigo.cl/privkey.pem")
 
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
+}
+func redirectHTTP(ctx *fasthttp.RequestCtx) {
+	redirectURL := fmt.Sprintf("https://%v%v", string(ctx.Host()), string(ctx.URI().RequestURI()))
+	ctx.Redirect(redirectURL, fasthttp.StatusMovedPermanently)
 }
 func Video(ctx *fasthttp.RequestCtx) {
 
