@@ -1,0 +1,94 @@
+
+<div class="mt">
+    <h1>{{.Titulo}}</h1>
+    <ul class="clearfix valign">
+        <a class="back icn r1" title="Situación Legal" onclick='navlink("/pages/crearPropiedad5?id={{.FormId}}")'></a>
+        <a class="back icn mdl" title="Detalle Propiedad" onclick='navlink("/pages/detallePropiedad?id={{.FormId}}")'></a>
+        <a class="back icn r2" title="Avalúo Comercial" onclick='navlink("/pages/crearPropiedad7?id={{.FormId}}")'></a>
+    </ul>
+</div>
+<hr>
+<div class="i">
+    <div class="fc" id="info-0">
+        <div class="fct">
+            <h1>{{.SubTitulo}}</h1>
+            <h2>{{.SubTitulo2}}</h2>
+            <ul class="clearfix valign"></ul>
+        </div>
+        <form action="" method="post" class="basic-grey">
+            <fieldset>
+                <input id="id" type="hidden" value="{{.FormId}}" />
+                <input id="accion" type="hidden" value="{{.FormAccion}}" />
+                <label>
+                    <span>Serie:</span>
+                    <select id="fiscal_serie">
+                        <option value="0" {{if eq .CamposPropiedades.Fiscal_serie 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CamposPropiedades.Fiscal_serie 1}}selected{{end}}>Agricola</option>
+                        <option value="2" {{if eq .CamposPropiedades.Fiscal_serie 2}}selected{{end}}>No Agricola</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Destino:</span>
+                    <select id="fiscal_destino">
+                        <option value="0" {{if eq .CamposPropiedades.Fiscal_destino 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CamposPropiedades.Fiscal_destino 1}}selected{{end}}>Comercial</option>
+                        <option value="2" {{if eq .CamposPropiedades.Fiscal_destino 2}}selected{{end}}>Industrial</option>
+                        <option value="3" {{if eq .CamposPropiedades.Fiscal_destino 3}}selected{{end}}>Habitacional</option>
+                        <option value="4" {{if eq .CamposPropiedades.Fiscal_destino 4}}selected{{end}}>Educacional</option>
+                        <option value="5" {{if eq .CamposPropiedades.Fiscal_destino 5}}selected{{end}}>Salud</option>
+                        <option value="6" {{if eq .CamposPropiedades.Fiscal_destino 6}}selected{{end}}>Otro</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Rol Manzana:</span>
+                    <input id="rol_manzana" type="text" value="{{.CamposPropiedades.Rol_manzana}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Rol Predio:</span>
+                    <input id="rol_predio" type="text" value="{{.CamposPropiedades.Rol_predio}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Exento:</span>
+                    <select id="fiscal_exento">
+                        <option value="0" {{if eq .CamposPropiedades.Fiscal_exento 0}}selected{{end}}>Seleccionar</option>
+                        <option value="1" {{if eq .CamposPropiedades.Fiscal_exento 1}}selected{{end}}>Si</option>
+                        <option value="2" {{if eq .CamposPropiedades.Fiscal_exento 2}}selected{{end}}>No</option>
+                    </select>
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Avaluo Fiscal:</span>
+                    <input id="avaluo_fiscal" type="text" value="{{.CamposPropiedades.Fiscal_avaluo}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Contribucion:</span>
+                    <input id="contribucion_fiscal" type="text" value="{{.CamposPropiedades.Fiscal_contribucion}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Superficie Terreno:</span>
+                    <input id="superficie_terreno" type="text" value="{{.CamposPropiedades.Fiscal_sup_terreno}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Superficie Edificada:</span>
+                    <input id="superficie_edificada" type="text" value="{{.CamposPropiedades.Fiscal_sup_edificada}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <label>
+                    <span>Superficie Pavimentos:</span>
+                    <input id="superficie_pavimentos" type="text" value="{{.CamposPropiedades.Fiscal_sup_pavimentos}}" require="" placeholder="" />
+                    <div class="mensaje"></div>
+                </label>
+                <div>
+                    <input type="button" onclick="fm(this)" value="Enviar">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
