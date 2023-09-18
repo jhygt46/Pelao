@@ -442,7 +442,7 @@ func main() {
 	passwords, err := os.ReadFile("../password_redigo.json")
 	if err == nil {
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
-			fmt.Println(pass.Passwords)
+
 		}
 	}
 
@@ -496,7 +496,6 @@ func main() {
 		//fasthttp.ListenAndServe(port, r.Handler)
 
 		// DESPUES
-
 		go func() {
 			fasthttp.ListenAndServe(":80", redirectHTTP)
 		}()
@@ -857,7 +856,6 @@ func Save(ctx *fasthttp.RequestCtx) {
 					if errup28 {
 						SaveFileDb2(db, list28[0], "", 21, "", "", id_rec, id, id_emp)
 					}
-
 				}
 			} else {
 				resp.Msg = "No tiene permisos"
@@ -8163,7 +8161,6 @@ func UpdateUF(valor int) {
 func SendEmail(to string, subject string, body string) bool {
 
 	from := "redigocl@gmail.com"
-	//from := "valleencantado.cl@gmail.com"
 	sub := fmt.Sprintf("From:%v\nTo:%v\nSubject:%v\n", from, to, subject)
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 
