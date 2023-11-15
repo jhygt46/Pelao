@@ -41,6 +41,7 @@ func main() {
 	if err == nil {
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
 			fmt.Println(pass.Passwords.FechaCert)
+			Restart()
 		}
 	}
 
@@ -123,7 +124,7 @@ func Request() {
 }
 func Restart() {
 	// Comando a ejecutar
-	cmd := exec.Command("./prod & > error.log")
+	cmd := exec.Command("../prod  2> error.log &")
 
 	// Captura la salida estándar del comando
 	stdout, err := cmd.Output()
