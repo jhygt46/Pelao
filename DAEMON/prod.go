@@ -145,8 +145,7 @@ func Request() bool {
 		return false
 	}
 
-	bodyString := string(bodyBytes)
-	fmt.Println(bodyBytes, bodyString)
+	fmt.Println(len(bodyBytes))
 
 	return true
 
