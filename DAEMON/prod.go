@@ -136,7 +136,7 @@ func Request() {
 }
 func Restart() {
 	// Comando a ejecutar
-	cmd := exec.Command(".././prod  2> error.log &")
+	cmd := exec.Command("/var/Pelao/prod  2> error.log &")
 
 	// Captura la salida estándar del comando
 	stdout, err := cmd.Output()
