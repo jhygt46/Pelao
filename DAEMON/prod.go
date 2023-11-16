@@ -136,7 +136,7 @@ func Request() {
 	}
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	bodyString := string(bodyBytes)
 	fmt.Println(bodyString)
