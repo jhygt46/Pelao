@@ -137,7 +137,7 @@ func Request() {
 
 }
 func Restart() {
-	cmd := exec.Command("./prod")
+	cmd := exec.Command("prod")
 
 	// Abre el archivo para escribir la salida de error
 	errorFile, err := os.Create("error.log")
