@@ -430,23 +430,32 @@ var pass = &MyHandler{Conf: Config{Lapsed: time.Now()}}
 
 func main() {
 
+	var file string
+
 	if runtime.GOOS == "windows" {
 		imgHandler = fasthttp.FSHandler("C:/Go/Pelao_No_Git/img", 1)
 		cssHandler = fasthttp.FSHandler("C:/Go/Pelao_No_Git/css", 1)
 		jsHandler = fasthttp.FSHandler("C:/Go/Pelao_No_Git/js", 1)
+		file = "C:/Go/password_redigo.json"
 		port = ":81"
 	} else {
 		imgHandler = fasthttp.FSHandler("/var/Pelao/img", 1)
 		cssHandler = fasthttp.FSHandler("/var/Pelao/css", 1)
 		jsHandler = fasthttp.FSHandler("/var/Pelao/js", 1)
+		file = "/var/password_redigo.json"
 		port = ":80"
 	}
 
-	passwords, err := os.ReadFile("../password_redigo.json")
+	passwords, err := os.ReadFile(file)
 	if err == nil {
+		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
-			fmt.Println(pass.Passwords)
+			fmt.Println("Ok ... Unmarshal datos de configuracion")
+		} else {
+			fmt.Println("Error ... Unmarshal datos de configuracion")
 		}
+	} else {
+		fmt.Println("Error ... al leer archivo de configuracion")
 	}
 
 	con := context.Background()

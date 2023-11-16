@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -36,13 +37,24 @@ type Passwords struct {
 func main() {
 
 	pass := &MyHandler{}
+	var file string
 
-	passwords, err := os.ReadFile("../../password_redigo.json")
+	if runtime.GOOS == "windows" {
+		file = "C:/Go/password_redigo.json"
+	} else {
+		file = "/var/password_redigo.json"
+	}
+
+	passwords, err := os.ReadFile(file)
 	if err == nil {
+		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
-			fmt.Println(pass.Passwords.FechaCert)
-			Restart()
+			fmt.Println("Ok ... Unmarshal datos de configuracion")
+		} else {
+			fmt.Println("Error ... Unmarshal datos de configuracion")
 		}
+	} else {
+		fmt.Println("Error ... al leer archivo de configuracion")
 	}
 
 	con := context.Background()
