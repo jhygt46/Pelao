@@ -425,6 +425,7 @@ var (
 	cssHandler fasthttp.RequestHandler
 	jsHandler  fasthttp.RequestHandler
 	port       string
+	path       string
 )
 var pass = &MyHandler{Conf: Config{Lapsed: time.Now()}}
 
@@ -437,12 +438,14 @@ func main() {
 		cssHandler = fasthttp.FSHandler("C:/Go/Pelao_No_Git/css", 1)
 		jsHandler = fasthttp.FSHandler("C:/Go/Pelao_No_Git/js", 1)
 		file = "C:/Go/password_redigo.json"
+		path = "C:/Go/Pelao_No_Git"
 		port = ":81"
 	} else {
 		imgHandler = fasthttp.FSHandler("/var/Pelao/img", 1)
 		cssHandler = fasthttp.FSHandler("/var/Pelao/css", 1)
 		jsHandler = fasthttp.FSHandler("/var/Pelao/js", 1)
 		file = "/var/password_redigo.json"
+		path = "/var/Pelao"
 		port = ":80"
 	}
 
@@ -4934,7 +4937,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 			obj := TemplateInicio{}
 			obj.Permisos = listaPermisos
@@ -4958,7 +4961,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, _ := SuperAdmin(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Empresa", "Subtitulo", "Subtitulo2", "Titulo Lista", "guardar_empresa", fmt.Sprintf("/pages/%s", name), "borrar_empresa", "Empresa")
@@ -4982,7 +4985,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearAlerta":
@@ -4990,7 +4993,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, _ := SuperAdmin(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Alerta", "Nueva Alerta", "Configurar", "Titulo Lista", "guardar_alerta", fmt.Sprintf("/pages/%s", name), "borrar_alerta", "Alerta")
@@ -5011,7 +5014,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearRegla":
@@ -5020,7 +5023,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 			id_ale := Read_uint32bytes(ctx.QueryArgs().Peek("id_ale"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Regla Alerta", "Configurar Regla", "Configurar", "Lista de Reglas", "guardar_regla", fmt.Sprintf("/pages/%s", name), "borrar_regla", "Regla")
@@ -5038,7 +5041,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearUsuarios":
@@ -5047,7 +5050,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			if listaPermisos.P0 {
 				id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-				t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+				t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 				ErrorCheck(err)
 
 				obj := GetTemplateConf("Crear Usuarios", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "guardar_usuarios", fmt.Sprintf("/pages/%s", name), "borrar_usuario", "Usuario")
@@ -5071,12 +5074,12 @@ func Pages(ctx *fasthttp.RequestCtx) {
 				err = t.Execute(ctx, obj)
 				ErrorCheck(err)
 			} else {
-				t, _ := TemplatePage("html/ErrorPermisos.html")
+				t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 				_ = t.Execute(ctx, nil)
 			}
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "AdminCotizacion":
@@ -5085,7 +5088,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Mis Cotizaciones", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "guardar_admin_cotizacion", fmt.Sprintf("/pages/%s", name), "borrar_cotizacion_admin", "Cotizacion")
@@ -5107,7 +5110,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "confCotizacion":
@@ -5119,7 +5122,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			id_ale := Read_uint32bytes(ctx.QueryArgs().Peek("id_ale"))
 			id_pro := Read_uint32bytes(ctx.QueryArgs().Peek("id_pro"))
 
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			lista, id_emp, nombreemp := GetAlertasCotizaciones(id_cot)
@@ -5154,7 +5157,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "envCotizacion":
@@ -5163,7 +5166,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			id_cot := Read_uint32bytes(ctx.QueryArgs().Peek("id_cot"))
 
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Mis Cotizaciones", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "", fmt.Sprintf("/pages/%s", name), "borrar_cotizacion", "Cotizacion")
@@ -5174,14 +5177,14 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "misCotizaciones":
 
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Mis Cotizaciones", "Subtitulo", "Subtitulo2", "Titulo Usuarios", "", fmt.Sprintf("/pages/%s", name), "borrar_cotizacion", "Cotizacion")
@@ -5192,7 +5195,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad":
@@ -5200,7 +5203,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Datos Generales", "Completar los datos", "Lista de Propiedades", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_propiedad", "Propiedad")
@@ -5223,7 +5226,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			err = t.Execute(ctx, obj)
 			ErrorCheck(err)
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad2PermisoEdificacion":
@@ -5232,7 +5235,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
 			id_rec := Read_uint32bytes(ctx.QueryArgs().Peek("id_rec"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Situación Municipal", "Completar los datos", "Lista de Permisos de Edificación", "guardar_propiedad2A", fmt.Sprintf("/pages/%s", name), "borrar_permiso", "Permiso Edificación")
@@ -5251,7 +5254,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad3":
@@ -5259,7 +5262,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Situación Técnica", "Completar los datos", "", "guardar_propiedad3", fmt.Sprintf("/pages/%s", name), "", "")
@@ -5286,7 +5289,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			err = t.Execute(ctx, obj)
 			ErrorCheck(err)
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad4":
@@ -5294,7 +5297,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Situación Comercial", "Completar los datos", "", "guardar_propiedad4", fmt.Sprintf("/pages/%s", name), "", "")
@@ -5317,7 +5320,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad5":
@@ -5325,7 +5328,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Situación Legal", "Completar los datos", "", "guardar_propiedad5", fmt.Sprintf("/pages/%s", name), "", "")
@@ -5357,7 +5360,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad6":
@@ -5365,7 +5368,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Situación Avalúo Fiscal", "Completar los datos", "", "guardar_propiedad6", fmt.Sprintf("/pages/%s", name), "", "")
@@ -5388,7 +5391,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad7":
@@ -5396,7 +5399,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Avalúo Comercial", "Completar los datos", "", "guardar_propiedad7", fmt.Sprintf("/pages/%s", name), "", "")
@@ -5419,7 +5422,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "crearPropiedad8":
@@ -5427,7 +5430,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("Crear Propiedad", "Normativo", "Completar los datos", "", "guardar_propiedad8", fmt.Sprintf("/pages/%s", name), "", "")
@@ -5450,7 +5453,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "buscarPropiedades":
@@ -5459,7 +5462,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 
 			listaPropiedades, errp := GetPropiedadesCompleto(id_emp)
 			if errp {
-				t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+				t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 				ErrorCheck(err)
 
 				obj := buscarPropiedades{}
@@ -5478,12 +5481,12 @@ func Pages(ctx *fasthttp.RequestCtx) {
 				err = t.Execute(ctx, obj)
 				ErrorCheck(err)
 			} else {
-				t, _ := TemplatePage("html/ErrorPermisos.html")
+				t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 				_ = t.Execute(ctx, nil)
 			}
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "detallePropiedad":
@@ -5491,7 +5494,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("", "Datos Generales", "Completar los datos", "Lista de Propiedades", "guardar_propiedad1", fmt.Sprintf("/pages/%s", name), "borrar_propiedad", "Propiedad")
@@ -5506,12 +5509,12 @@ func Pages(ctx *fasthttp.RequestCtx) {
 				err = t.Execute(ctx, obj)
 				ErrorCheck(err)
 			} else {
-				t, _ := TemplatePage("html/ErrorPermisos.html")
+				t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 				_ = t.Execute(ctx, nil)
 			}
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	case "descargarPropiedad":
@@ -5519,7 +5522,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 		if found, id_emp, listaPermisos := Permisos(token); found {
 
 			id := Read_uint32bytes(ctx.QueryArgs().Peek("id"))
-			t, err := TemplatePage(fmt.Sprintf("html/%s.html", name))
+			t, err := TemplatePage(fmt.Sprintf("%s/html/%s.html", path, name))
 			ErrorCheck(err)
 
 			obj := GetTemplateConf("", "Datos Generales", "Completar los datos", "Lista de Propiedades", "descargar_custom_pdf", fmt.Sprintf("/pages/%s", name), "borrar_propiedad", "Propiedad")
@@ -5536,7 +5539,7 @@ func Pages(ctx *fasthttp.RequestCtx) {
 			ErrorCheck(err)
 
 		} else {
-			t, _ := TemplatePage("html/ErrorPermisos.html")
+			t, _ := TemplatePage(fmt.Sprintf("%s/html/ErrorPermisos.html", path))
 			_ = t.Execute(ctx, nil)
 		}
 	default:
@@ -5657,7 +5660,7 @@ func Acciones(ctx *fasthttp.RequestCtx) {
 func Recuperar(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetContentType("text/html; charset=utf-8")
-	t, err := TemplatePage("html/recuperar.html")
+	t, err := TemplatePage(fmt.Sprintf("%s/html/recuperar.html", path))
 	ErrorCheck(err)
 	var x Rec
 	x.Rec = false
@@ -5673,7 +5676,7 @@ func Recuperar2(ctx *fasthttp.RequestCtx) {
 	strname, ok1 := name.(string)
 	strid, ok2 := id.(string)
 	if ok1 && ok2 {
-		t, err := TemplatePage("html/recuperar.html")
+		t, err := TemplatePage(fmt.Sprintf("%s/html/recuperar.html", path))
 		ErrorCheck(err)
 		var x Rec
 		x.Rec = true
@@ -5697,13 +5700,13 @@ func Index(ctx *fasthttp.RequestCtx) {
 			gpu.Function = fmt.Sprintf("detallePropiedad?id=%v", id)
 		}
 
-		t, err := TemplatePage("html/inicio.html")
+		t, err := TemplatePage(fmt.Sprintf("%s/html/inicio.html", path))
 		ErrorCheck(err)
 		err = t.Execute(ctx, gpu)
 		ErrorCheck(err)
 
 	} else {
-		t, _ := TemplatePage("html/login.html")
+		t, _ := TemplatePage(fmt.Sprintf("%s/html/login.html", path))
 		_ = t.Execute(ctx, nil)
 	}
 }
