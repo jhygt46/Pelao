@@ -510,16 +510,16 @@ func main() {
 		r.GET("/RCPG47D4F1AZS6", Error)
 
 		// ANTES
-		fasthttp.ListenAndServe(port, r.Handler)
+		//fasthttp.ListenAndServe(port, r.Handler)
 
 		// DESPUES
-		/*
-			go func() {
-				fasthttp.ListenAndServe(":80", redirectHTTP)
-			}()
-			server := &fasthttp.Server{Handler: r.Handler}
-			server.ListenAndServeTLS(":443", "/etc/letsencrypt/live/www.redigo.cl/fullchain.pem", "/etc/letsencrypt/live/www.redigo.cl/privkey.pem")
-		*/
+
+		go func() {
+			fasthttp.ListenAndServe(":80", redirectHTTP)
+		}()
+		server := &fasthttp.Server{Handler: r.Handler}
+		server.ListenAndServeTLS(":443", "/etc/letsencrypt/live/www.redigo.cl/fullchain.pem", "/etc/letsencrypt/live/www.redigo.cl/privkey.pem")
+
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
