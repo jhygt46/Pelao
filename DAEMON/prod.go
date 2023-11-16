@@ -139,8 +139,6 @@ func Request() bool {
 		return false
 	}
 
-	fmt.Println("Bytes", r.Body)
-
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Println("Error al leer el cuerpo de la respuesta:", err)
@@ -148,7 +146,7 @@ func Request() bool {
 	}
 
 	bodyString := string(bodyBytes)
-	fmt.Println(bodyString)
+	fmt.Println(bodyBytes, bodyString)
 
 	return true
 
