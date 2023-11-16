@@ -148,6 +148,8 @@ func Request() bool {
 	bodyString := string(bodyBytes)
 	fmt.Println(bodyString)
 
+	return true
+
 }
 func (h *MyHandler) StartProcess() {
 
