@@ -10,12 +10,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -127,9 +125,7 @@ func Request() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	data := url.Values{"code": {"Fs1R5MKsL94AmT2zXd"}}
-	body := strings.NewReader(data.Encode())
-	r, err := client.Post("https://localhost/RCPG47D4F1AZS5", "application/x-www-form-urlencoded", body)
+	r, err := client.Get("https://localhost/RCPG47D4F1AZS5")
 	if err != nil {
 		fmt.Println(err)
 		//StartProcess()
