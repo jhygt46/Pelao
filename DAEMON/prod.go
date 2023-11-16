@@ -26,6 +26,9 @@ type Config struct {
 type MyHandler struct {
 	Conf      Config    `json:"Conf"`
 	Passwords Passwords `json:"Passwords"`
+	Path      string    `json:"Path"`
+	Pid       int       `json:"Pid"`
+	Running   bool      `json:"Start"`
 }
 type Passwords struct {
 	PassDb    string `json:"PassDb"`
@@ -36,13 +39,15 @@ type Passwords struct {
 
 func main() {
 
-	pass := &MyHandler{}
+	pass := &MyHandler{Running: false}
 	var file string
 
 	if runtime.GOOS == "windows" {
 		file = "C:/Go/password_redigo.json"
+		pass.Path = "C:/Go/Pelao_No_Git"
 	} else {
 		file = "/var/password_redigo.json"
+		pass.Path = "/var/Pelao"
 	}
 
 	passwords, err := os.ReadFile(file)
@@ -57,7 +62,8 @@ func main() {
 		fmt.Println("Error ... al leer archivo de configuracion")
 	}
 
-	Restart()
+	//Request()
+	//pass.StartProcess()
 
 	con := context.Background()
 	con, cancel := context.WithCancel(con)
@@ -94,9 +100,9 @@ func main() {
 
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
-	h.Conf.Tiempo = 15 * time.Second
-	//Request()
+	h.Conf.Tiempo = 5 * time.Second
 	fmt.Println("DAEMON")
+	Request()
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
@@ -126,7 +132,7 @@ func Request() {
 	r, err := client.Post("https://localhost/RCPG47D4F1AZS5", "application/x-www-form-urlencoded", body)
 	if err != nil {
 		fmt.Println(err)
-		Restart()
+		//StartProcess()
 	}
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -136,33 +142,57 @@ func Request() {
 	fmt.Println(bodyString)
 
 }
-func Restart() {
-	cmd := exec.Command("prod")
+func (h *MyHandler) StartProcess() {
 
-	// Abre el archivo para escribir la salida de error
-	errorFile, err := os.Create("error.log")
-	if err != nil {
-		fmt.Println("Error al abrir el archivo de error:", err)
-		return
+	if !h.Running {
+
+		cmd := exec.Command("prod")
+		errorFile, err := os.Create(fmt.Sprintf("%s/error.log", h.Path))
+		if err != nil {
+			fmt.Println("Error al abrir el archivo de error:", err)
+			return
+		}
+		defer errorFile.Close()
+		cmd.Stderr = errorFile
+
+		err = cmd.Start()
+		if err != nil {
+			fmt.Println("Error al iniciar el comando:", err)
+			return
+		}
+		h.Pid = cmd.Process.Pid
+		h.Running = true
+		fmt.Println("Comando ejecutándose en segundo plano. PID:", cmd.Process.Pid)
+
+		// Espera a que el comando termine
+		err = cmd.Wait()
+		if err != nil {
+			fmt.Println("Error al esperar a que el comando termine:", err)
+		}
+
+	} else {
+		fmt.Println("Error el programa ya esta corriendo")
 	}
-	defer errorFile.Close()
+}
+func (h *MyHandler) KillProcess() {
 
-	// Configura la salida de error del comando para que vaya al archivo
-	cmd.Stderr = errorFile
+	if h.Running {
 
-	// Ejecuta el comando en segundo plano
-	err = cmd.Start()
-	if err != nil {
-		fmt.Println("Error al iniciar el comando:", err)
-		return
-	}
+		cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", h.Pid))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 
-	fmt.Println("Comando ejecutándose en segundo plano. PID:", cmd.Process.Pid)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Printf("Error al enviar la señal SIGKILL: %s\n", err)
+			return
+		}
 
-	// Espera a que el comando termine
-	err = cmd.Wait()
-	if err != nil {
-		fmt.Println("Error al esperar a que el comando termine:", err)
+		h.Running = false
+		fmt.Printf("Señal SIGKILL enviada al proceso con PID %d\n", h.Pid)
+
+	} else {
+		fmt.Println("Error el programa no esta corriendo")
 	}
 }
 
