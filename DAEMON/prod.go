@@ -57,6 +57,8 @@ func main() {
 		fmt.Println("Error ... al leer archivo de configuracion")
 	}
 
+	Restart()
+
 	con := context.Background()
 	con, cancel := context.WithCancel(con)
 	signalChan := make(chan os.Signal, 1)
