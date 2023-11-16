@@ -137,27 +137,17 @@ func Request() {
 
 }
 func Restart() {
-	// Comando a ejecutar
+	// Especifica el comando que deseas ejecutar y sus argumentos
+	cmd := exec.Command("/var/Pelao/prod")
 
-	cmd := exec.Command("./prod 2> error.log &")
-	cmd.Dir = "/var/Pelao"
-
-	err := cmd.Run()
+	// Captura la salida estándar y la salida de error del programa
+	stdout, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Captura la salida estándar del comando
-	stdout, err := cmd.Output()
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-
-	// Convierte la salida en una cadena y muestra el resultado
-	outputStr := string(stdout)
-	fmt.Println("Salida del comando:")
-	fmt.Println(outputStr)
+	// Imprime la salida del programa
+	log.Printf("Salida del programa:\n%s", stdout)
 }
 
 /*
