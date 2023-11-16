@@ -137,17 +137,33 @@ func Request() {
 
 }
 func Restart() {
-	// Especifica el comando que deseas ejecutar y sus argumentos
-	cmd := exec.Command("prod", "2>", "error.log", "&")
+	cmd := exec.Command("./prod")
 
-	// Captura la salida estándar y la salida de error del programa
-	stdout, err := cmd.CombinedOutput()
+	// Abre el archivo para escribir la salida de error
+	errorFile, err := os.Create("error.log")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error al abrir el archivo de error:", err)
+		return
+	}
+	defer errorFile.Close()
+
+	// Configura la salida de error del comando para que vaya al archivo
+	cmd.Stderr = errorFile
+
+	// Ejecuta el comando en segundo plano
+	err = cmd.Start()
+	if err != nil {
+		fmt.Println("Error al iniciar el comando:", err)
+		return
 	}
 
-	// Imprime la salida del programa
-	log.Printf("Salida del programa:\n%s", stdout)
+	fmt.Println("Comando ejecutándose en segundo plano. PID:", cmd.Process.Pid)
+
+	// Espera a que el comando termine
+	err = cmd.Wait()
+	if err != nil {
+		fmt.Println("Error al esperar a que el comando termine:", err)
+	}
 }
 
 /*
