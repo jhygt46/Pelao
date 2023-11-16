@@ -125,15 +125,26 @@ func Request() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
+
 	r, err := client.Get("https://localhost/RCPG47D4F1AZS5")
 	if err != nil {
-		fmt.Println(err)
-		//StartProcess()
+		fmt.Println("Error al realizar la solicitud HTTP:", err)
+		return
 	}
+	defer r.Body.Close() // Cerrar el cuerpo de la respuesta al finalizar la función
+
+	// Verificar el código de estado de la respuesta
+	if r.StatusCode != http.StatusOK {
+		fmt.Printf("Respuesta no exitosa. Código de estado: %d\n", r.StatusCode)
+		return
+	}
+
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error al leer el cuerpo de la respuesta:", err)
+		return
 	}
+
 	bodyString := string(bodyBytes)
 	fmt.Println(bodyString)
 
