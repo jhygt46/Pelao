@@ -518,7 +518,7 @@ func main() {
 			fasthttp.ListenAndServe(":80", redirectHTTP)
 		}()
 		server := &fasthttp.Server{Handler: r.Handler}
-		server.ListenAndServeTLS(":443", "/etc/letsencrypt/live/www.redigo.cl/fullchain.pem", "/etc/letsencrypt/live/www.redigo.cl/privkey.pem")
+		server.ListenAndServeTLS(":443", "/etc/letsencrypt/live/redigo.cl/fullchain.pem", "/etc/letsencrypt/live/redigo.cl/privkey.pem")
 
 	}()
 	if err := run(con, pass, os.Stdout); err != nil {
