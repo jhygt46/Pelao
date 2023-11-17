@@ -100,7 +100,7 @@ func main() {
 func (h *MyHandler) StartDaemon() {
 	h.Conf.Tiempo = 15 * time.Second
 	if !Request() {
-		h.StartProcess()
+		h.StartProcess2()
 	}
 }
 func (c *Config) init() {
@@ -156,6 +156,41 @@ func Request() bool {
 		return false
 	}
 }
+
+func (h *MyHandler) StartProcess2() {
+
+	cmd := exec.Command("prod", "&")
+
+	// Iniciar el comando
+	err := cmd.Start()
+	if err != nil {
+		fmt.Printf("Error al iniciar el comando: %s\n", err)
+		return
+	}
+
+	// Utilizar un canal para esperar a que el comando termine
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	// Esperar con un temporizador
+	select {
+	case <-time.After(time.Second * 10): // Puedes ajustar el tiempo límite según tus necesidades
+		fmt.Println("El programa se ejecutó durante mucho tiempo. Terminándolo...")
+		err := cmd.Process.Kill()
+		if err != nil {
+			fmt.Printf("Error al matar el proceso: %s\n", err)
+		}
+	case err := <-done:
+		if err != nil {
+			fmt.Printf("Error al esperar al comando: %s\n", err)
+		} else {
+			fmt.Println("El comando se ejecutó correctamente.")
+		}
+	}
+}
+
 func (h *MyHandler) StartProcess() {
 
 	if !h.Running {
