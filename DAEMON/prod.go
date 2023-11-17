@@ -29,10 +29,14 @@ type MyHandler struct {
 	Running   bool      `json:"Start"`
 }
 type Passwords struct {
-	PassDb    string `json:"PassDb"`
-	PassEmail string `json:"PassEmail"`
-	Gmapkey   string `json:"Gmapkey"`
-	FechaCert string `json:"FechaCert"`
+	PassDb    string   `json:"PassDb"`
+	PassEmail string   `json:"PassEmail"`
+	Gmapkey   string   `json:"Gmapkey"`
+	Cert      CertData `json:"Cert"`
+}
+type CertData struct {
+	Fecha time.Time `json:"Fecha"`
+	Count int       `json:"Count"`
 }
 
 func main() {
@@ -60,8 +64,7 @@ func main() {
 		fmt.Println("Error ... al leer archivo de configuracion")
 	}
 
-	//Request()
-	//pass.StartProcess()
+	SolicitarSSL()
 
 	con := context.Background()
 	con, cancel := context.WithCancel(con)
@@ -100,7 +103,7 @@ func main() {
 func (h *MyHandler) StartDaemon() {
 	h.Conf.Tiempo = 15 * time.Second
 	if !Request() {
-		h.StartProcess2()
+		//h.StartProcess()
 	}
 }
 func (c *Config) init() {
@@ -156,8 +159,7 @@ func Request() bool {
 		return false
 	}
 }
-
-func (h *MyHandler) StartProcess2() {
+func (h *MyHandler) StartProcess() {
 
 	cmd := exec.Command("prod")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
@@ -178,40 +180,6 @@ func (h *MyHandler) StartProcess2() {
 		}
 		fmt.Println("Subproceso completado.")
 	}()
-
-}
-
-func (h *MyHandler) StartProcess() {
-
-	if !h.Running {
-
-		cmd := exec.Command("prod", "&")
-		errorFile, err := os.Create(fmt.Sprintf("%s/error.log", h.Path))
-		if err != nil {
-			fmt.Println("Error al abrir el archivo de error:", err)
-			return
-		}
-		defer errorFile.Close()
-		cmd.Stderr = errorFile
-
-		err = cmd.Start()
-		if err != nil {
-			fmt.Println("Error al iniciar el comando:", err)
-			return
-		}
-		h.Pid = cmd.Process.Pid
-		h.Running = true
-		fmt.Println("Comando ejecutándose en segundo plano. PID:", cmd.Process.Pid)
-
-		// Espera a que el comando termine
-		err = cmd.Wait()
-		if err != nil {
-			fmt.Println("Error al esperar a que el comando termine:", err)
-		}
-
-	} else {
-		fmt.Println("Error el programa ya esta corriendo")
-	}
 }
 func (h *MyHandler) KillProcess() {
 
