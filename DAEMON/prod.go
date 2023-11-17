@@ -98,9 +98,10 @@ func main() {
 
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
-	h.Conf.Tiempo = 5 * time.Second
-	fmt.Println("DAEMON")
-	Request()
+	h.Conf.Tiempo = 15 * time.Second
+	if !Request() {
+		h.StartProcess()
+	}
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
@@ -145,10 +146,15 @@ func Request() bool {
 		return false
 	}
 
-	fmt.Println(len(bodyBytes))
-
-	return true
-
+	if len(bodyBytes) == 1 {
+		if bodyBytes[0] == 1 {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
 }
 func (h *MyHandler) StartProcess() {
 
@@ -202,6 +208,16 @@ func (h *MyHandler) KillProcess() {
 	} else {
 		fmt.Println("Error el programa no esta corriendo")
 	}
+}
+func SolicitarSSL() bool {
+	cmd := exec.Command("certbot", "certonly", "--standalone", "-d", "redigo.cl", "-d", "www.redigo.cl", "--noninteractive", "--agree-tos", "--register-unsafely-without-email")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("Error al ejecutar el comando: %s\n", err)
+		return false
+	}
+	fmt.Println(string(out))
+	return true
 }
 
 /*
