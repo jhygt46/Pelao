@@ -160,7 +160,7 @@ func (h *MyHandler) StartProcess() {
 
 	if !h.Running {
 
-		cmd := exec.Command("prod")
+		cmd := exec.Command("prod", "&")
 		errorFile, err := os.Create(fmt.Sprintf("%s/error.log", h.Path))
 		if err != nil {
 			fmt.Println("Error al abrir el archivo de error:", err)
