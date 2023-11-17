@@ -203,13 +203,17 @@ func (h *MyHandler) KillProcess() {
 	}
 }
 func SolicitarSSL() bool {
-	cmd := exec.Command("certbot", "certonly", "--standalone", "-d", "redigo.cl", "-d", "www.redigo.cl", "--noninteractive", "--agree-tos", "--register-unsafely-without-email")
-	out, err := cmd.CombinedOutput()
+	cmd := exec.Command("sh", "run.sh")
+
+	// Capturar la salida estándar y de error del comando
+	stdout, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("Error al ejecutar el comando: %s\n", err)
+		fmt.Println("Error al ejecutar el script:", err)
 		return false
 	}
-	fmt.Println(string(out))
+
+	// Imprimir la salida del script
+	fmt.Println(string(stdout))
 	return true
 }
 
