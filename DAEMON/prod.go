@@ -168,6 +168,9 @@ func (h *MyHandler) StartProcess2() {
 		return
 	}
 
+	// Configurar un nuevo grupo de procesos para el proceso hijo
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	// Utilizar un canal para esperar a que el comando termine
 	done := make(chan error, 1)
 	go func() {
@@ -178,7 +181,7 @@ func (h *MyHandler) StartProcess2() {
 	select {
 	case <-time.After(time.Second * 10): // Puedes ajustar el tiempo límite según tus necesidades
 		fmt.Println("El programa se ejecutó durante mucho tiempo. Terminándolo...")
-		err := cmd.Process.Kill()
+		err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 		if err != nil {
 			fmt.Printf("Error al matar el proceso: %s\n", err)
 		}
@@ -189,6 +192,7 @@ func (h *MyHandler) StartProcess2() {
 			fmt.Println("El comando se ejecutó correctamente.")
 		}
 	}
+
 }
 
 func (h *MyHandler) StartProcess() {
