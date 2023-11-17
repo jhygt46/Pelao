@@ -159,36 +159,25 @@ func Request() bool {
 
 func (h *MyHandler) StartProcess2() {
 
-	// Comando a ejecutar
-	cmd := exec.Command("prod") // Reemplaza "your_program", "arg1", "arg2" con tu programa y argumentos
-
-	// Configura para desvincular el proceso hijo del proceso padre
+	cmd := exec.Command("prod")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
 
-	// Inicia el subproceso
 	err := cmd.Start()
 	if err != nil {
 		fmt.Println("Error al iniciar el subproceso:", err)
 		return
 	}
 
-	fmt.Printf("Proceso hijo iniciado con PID: %d\n", cmd.Process.Pid)
+	h.Pid = cmd.Process.Pid
 
-	// Deja que el subproceso continúe en segundo plano
 	go func() {
-		// Espera a que el subproceso termine
 		err := cmd.Wait()
 		if err != nil {
 			fmt.Println("Error al esperar a que el subproceso termine:", err)
 			return
 		}
-
 		fmt.Println("Subproceso completado.")
 	}()
-
-	// Hacer algo más en el programa principal
-	time.Sleep(2 * time.Second)
-	fmt.Println("Programa principal completado.")
 
 }
 
