@@ -159,7 +159,7 @@ func Request() bool {
 
 func (h *MyHandler) StartProcess2() {
 
-	cmd := exec.Command("prod", "&")
+	cmd := exec.Command("prod")
 
 	// Iniciar el comando
 	err := cmd.Start()
