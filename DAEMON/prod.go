@@ -25,30 +25,26 @@ type MyHandler struct {
 	Conf      Config    `json:"Conf"`
 	Passwords Passwords `json:"Passwords"`
 	Path      string    `json:"Path"`
-	Pid       int       `json:"Pid"`
-	Running   bool      `json:"Start"`
+	File      string    `json:"File"`
 }
 type Passwords struct {
-	PassDb    string   `json:"PassDb"`
-	PassEmail string   `json:"PassEmail"`
-	Gmapkey   string   `json:"Gmapkey"`
-	Cert      CertData `json:"Cert"`
-}
-type CertData struct {
-	Fecha time.Time `json:"Fecha"`
-	Count int       `json:"Count"`
+	PassDb    string    `json:"PassDb"`
+	PassEmail string    `json:"PassEmail"`
+	Gmapkey   string    `json:"Gmapkey"`
+	FechaCert time.Time `json:"FechaCert"`
+	Pid       int       `json:"Pid"`
 }
 
 func main() {
 
-	pass := &MyHandler{Running: false}
+	pass := &MyHandler{}
 	var file string
 
 	if runtime.GOOS == "windows" {
-		file = "C:/Go/password_redigo.json"
+		pass.File = "C:/Go/password_redigo.json"
 		pass.Path = "C:/Go/Pelao_No_Git"
 	} else {
-		file = "/var/password_redigo.json"
+		pass.File = "/var/password_redigo.json"
 		pass.Path = "/var/Pelao"
 	}
 
@@ -56,6 +52,14 @@ func main() {
 	if err == nil {
 		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
+
+			if pass.Passwords.FechaCert.IsZero() {
+				if pass.SolicitarSSL() {
+					pass.Passwords.FechaCert = time.Now()
+					pass.SaveFile()
+				}
+			}
+
 			fmt.Println("Ok ... Unmarshal datos de configuracion")
 		} else {
 			fmt.Println("Error ... Unmarshal datos de configuracion")
@@ -63,8 +67,6 @@ func main() {
 	} else {
 		fmt.Println("Error ... al leer archivo de configuracion")
 	}
-
-	SolicitarSSL()
 
 	con := context.Background()
 	con, cancel := context.WithCancel(con)
@@ -101,9 +103,19 @@ func main() {
 
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
+	fmt.Println("FUNC StartDaemon")
 	h.Conf.Tiempo = 15 * time.Second
 	if !Request() {
-		//h.StartProcess()
+		h.StartProcess()
+	} else {
+		since := time.Since(h.Passwords.FechaCert)
+		days := since.Seconds() / 86400
+		if days > 175 && time.Now().Hour() == 3 {
+			if h.SolicitarSSL() {
+				h.Passwords.FechaCert = time.Now()
+				h.SaveFile()
+			}
+		}
 	}
 }
 func (c *Config) init() {
@@ -125,6 +137,7 @@ func run(con context.Context, c *MyHandler, stdout io.Writer) error {
 
 func Request() bool {
 
+	fmt.Println("FUNC Request")
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -161,6 +174,7 @@ func Request() bool {
 }
 func (h *MyHandler) StartProcess() {
 
+	fmt.Println("FUNC StartProcess")
 	cmd := exec.Command("prod")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
 
@@ -170,51 +184,76 @@ func (h *MyHandler) StartProcess() {
 		return
 	}
 
-	h.Pid = cmd.Process.Pid
+	h.Passwords.Pid = cmd.Process.Pid
+	h.SaveFile()
 
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
 			fmt.Println("Error al esperar a que el subproceso termine:", err)
+			h.saveErrorToFile(err)
 			return
 		}
 		fmt.Println("Subproceso completado.")
 	}()
 }
-func (h *MyHandler) KillProcess() {
+func (h *MyHandler) KillProcess() bool {
 
-	if h.Running {
+	fmt.Println("FUNC KillProcess")
+	cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", h.Passwords.Pid))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-		cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", h.Pid))
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		err := cmd.Run()
-		if err != nil {
-			fmt.Printf("Error al enviar la señal SIGKILL: %s\n", err)
-			return
-		}
-
-		h.Running = false
-		fmt.Printf("Señal SIGKILL enviada al proceso con PID %d\n", h.Pid)
-
-	} else {
-		fmt.Println("Error el programa no esta corriendo")
-	}
-}
-func SolicitarSSL() bool {
-	cmd := exec.Command("sh", "run.sh")
-
-	// Capturar la salida estándar y de error del comando
-	stdout, err := cmd.Output()
+	err := cmd.Run()
 	if err != nil {
-		fmt.Println("Error al ejecutar el script:", err)
+		fmt.Printf("Error al enviar la señal SIGKILL: %s\n", err)
 		return false
 	}
-
-	// Imprimir la salida del script
-	fmt.Println(string(stdout))
 	return true
+}
+func (h *MyHandler) SolicitarSSL() bool {
+	fmt.Println("FUNC SolicitarSSL")
+	if h.KillProcess() {
+		cmd := exec.Command("sh", "run.sh")
+		_, err := cmd.Output()
+		if err != nil {
+			fmt.Println("Error al ejecutar el script:", err)
+			return false
+		}
+		return true
+	} else {
+		return false
+	}
+}
+func (h *MyHandler) SaveFile() bool {
+	fmt.Println("FUNC SaveFile")
+	archivo, err := os.Create(h.File)
+	if err != nil {
+		fmt.Println("Error al crear el archivo:", err)
+		return false
+	}
+	defer archivo.Close()
+
+	encoder := json.NewEncoder(archivo)
+	err = encoder.Encode(h.Passwords)
+	if err != nil {
+		fmt.Println("Error al codificar la estructura:", err)
+		return false
+	}
+	return true
+}
+func (h *MyHandler) saveErrorToFile(err error) {
+	fmt.Println("FUNC saveErrorToFile")
+	file, err := os.Create(fmt.Sprintf("%v/error.log", h.Path))
+	if err != nil {
+		fmt.Println("Error al crear el archivo de registro:", err)
+		return
+	}
+	defer file.Close()
+	_, err = file.WriteString(fmt.Sprintf("Error: %v\n", err))
+	if err != nil {
+		fmt.Println("Error al escribir en el archivo de registro:", err)
+	}
 }
 
 /*
