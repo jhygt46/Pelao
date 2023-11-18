@@ -64,7 +64,7 @@ func main() {
 			fmt.Println("Error ... Unmarshal datos de configuracion")
 		}
 	} else {
-		fmt.Println("Error ... al leer archivo de configuracion")
+		fmt.Println("Error ... al leer archivo de configuracion", err)
 	}
 
 	con := context.Background()
