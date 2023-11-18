@@ -38,7 +38,6 @@ type Passwords struct {
 func main() {
 
 	pass := &MyHandler{}
-	var file string
 
 	if runtime.GOOS == "windows" {
 		pass.File = "C:/Go/password_redigo.json"
@@ -48,7 +47,7 @@ func main() {
 		pass.Path = "/var/Pelao"
 	}
 
-	passwords, err := os.ReadFile(file)
+	passwords, err := os.ReadFile(pass.File)
 	if err == nil {
 		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
