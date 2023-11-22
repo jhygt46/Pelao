@@ -26,6 +26,7 @@ type MyHandler struct {
 	Passwords Passwords `json:"Passwords"`
 	Path      string    `json:"Path"`
 	File      string    `json:"File"`
+	Debug     int       `json:"Debug"`
 }
 type Passwords struct {
 	PassDb    string    `json:"PassDb"`
@@ -37,7 +38,7 @@ type Passwords struct {
 
 func main() {
 
-	pass := &MyHandler{}
+	pass := &MyHandler{Debug: 0}
 
 	if runtime.GOOS == "windows" {
 		pass.File = "C:/Go/password_redigo.json"
@@ -52,7 +53,7 @@ func main() {
 		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
 			fmt.Println("Ok ... Unmarshal datos de configuracion")
-			if Request() {
+			if pass.Request() {
 				fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
 			} else {
 				fmt.Println("Error ... Servicio Caido, Iniciando ...")
@@ -102,7 +103,7 @@ func (h *MyHandler) StartDaemon() {
 	fmt.Println("FUNC StartDaemon")
 	h.Conf.Tiempo = 15 * time.Second
 	/*
-		if !Request() {
+		if !h.Request() {
 			h.StartProcess()
 		} else {
 			since := time.Since(h.Passwords.FechaCert)
@@ -133,7 +134,7 @@ func run(con context.Context, c *MyHandler, stdout io.Writer) error {
 	}
 }
 
-func Request() bool {
+func (h *MyHandler) Request() bool {
 
 	fmt.Println("FUNC Request")
 	tr := &http.Transport{
@@ -143,20 +144,26 @@ func Request() bool {
 
 	r, err := client.Get("https://localhost/RCPG47D4F1AZS5")
 	if err != nil {
-		fmt.Println("Error al realizar la solicitud HTTP:", err)
+		if h.Debug == 1 {
+			fmt.Println("Error al realizar la solicitud HTTP:", err)
+		}
 		return false
 	}
 	defer r.Body.Close() // Cerrar el cuerpo de la respuesta al finalizar la función
 
 	// Verificar el código de estado de la respuesta
 	if r.StatusCode != http.StatusOK {
-		fmt.Printf("Respuesta no exitosa. Código de estado: %d\n", r.StatusCode)
+		if h.Debug == 1 {
+			fmt.Printf("Respuesta no exitosa. Código de estado: %d\n", r.StatusCode)
+		}
 		return false
 	}
 
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("Error al leer el cuerpo de la respuesta:", err)
+		if h.Debug == 1 {
+			fmt.Println("Error al leer el cuerpo de la respuesta:", err)
+		}
 		return false
 	}
 
