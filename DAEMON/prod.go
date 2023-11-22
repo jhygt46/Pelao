@@ -38,7 +38,7 @@ type Passwords struct {
 
 func main() {
 
-	pass := &MyHandler{Debug: 0}
+	pass := &MyHandler{Debug: 3}
 
 	if runtime.GOOS == "windows" {
 		pass.File = "C:/Go/password_redigo.json"
@@ -57,6 +57,7 @@ func main() {
 				fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
 			} else {
 				fmt.Println("Error ... Servicio Caido, Iniciando ...")
+				pass.StartProcess()
 			}
 		} else {
 			fmt.Println("Error ... Unmarshal datos de configuracion")
@@ -135,7 +136,6 @@ func run(con context.Context, c *MyHandler, stdout io.Writer) error {
 		}
 	}
 }
-
 func (h *MyHandler) Request() bool {
 
 	if h.Debug == 2 {
@@ -183,13 +183,17 @@ func (h *MyHandler) Request() bool {
 }
 func (h *MyHandler) StartProcess() {
 
-	fmt.Println("FUNC StartProcess")
+	if h.Debug == 2 || h.Debug == 3 {
+		fmt.Println("FUNC StartProcess")
+	}
 	cmd := exec.Command(fmt.Sprintf("%v/prod", h.Path))
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
 
 	err := cmd.Start()
 	if err != nil {
-		fmt.Println("Error al iniciar el subproceso:", err)
+		if h.Debug == 1 || h.Debug == 3 {
+			fmt.Println("Error al iniciar el subproceso:", err)
+		}
 		return
 	}
 
@@ -199,12 +203,19 @@ func (h *MyHandler) StartProcess() {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			fmt.Println("Error al esperar a que el subproceso termine:", err)
+			if h.Debug == 1 || h.Debug == 3 {
+				fmt.Println("Error al esperar a que el subproceso termine:", err)
+			}
 			h.saveErrorToFile(err)
 			return
 		}
-		fmt.Println("Subproceso completado.")
+		if h.Debug == 1 || h.Debug == 3 {
+			fmt.Println("Subproceso completado.")
+		}
 	}()
+}
+func (h *MyHandler) ResetProcess() bool {
+	return h.KillProcess()
 }
 func (h *MyHandler) KillProcess() bool {
 
