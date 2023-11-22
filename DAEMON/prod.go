@@ -100,7 +100,9 @@ func main() {
 
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
-	fmt.Println("FUNC StartDaemon")
+	if h.Debug == 2 {
+		fmt.Println("FUNC StartDaemon")
+	}
 	h.Conf.Tiempo = 15 * time.Second
 	/*
 		if !h.Request() {
@@ -136,7 +138,9 @@ func run(con context.Context, c *MyHandler, stdout io.Writer) error {
 
 func (h *MyHandler) Request() bool {
 
-	fmt.Println("FUNC Request")
+	if h.Debug == 2 {
+		fmt.Println("FUNC Request")
+	}
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
