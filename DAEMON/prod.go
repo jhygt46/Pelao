@@ -51,11 +51,12 @@ func main() {
 	if err == nil {
 		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
-			if pass.Passwords.FechaCert.IsZero() {
-				pass.Passwords.FechaCert = time.Now()
-				pass.SaveFile()
-			}
 			fmt.Println("Ok ... Unmarshal datos de configuracion")
+			if Request() {
+				fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
+			} else {
+				fmt.Println("Error ... Servicio Caido, Iniciando ...")
+			}
 		} else {
 			fmt.Println("Error ... Unmarshal datos de configuracion")
 		}
@@ -100,18 +101,20 @@ func main() {
 func (h *MyHandler) StartDaemon() {
 	fmt.Println("FUNC StartDaemon")
 	h.Conf.Tiempo = 15 * time.Second
-	if !Request() {
-		h.StartProcess()
-	} else {
-		since := time.Since(h.Passwords.FechaCert)
-		days := since.Seconds() / 86400
-		if days > 175 && time.Now().Hour() == 3 {
-			if h.SolicitarSSL() {
-				h.Passwords.FechaCert = time.Now()
-				h.SaveFile()
+	/*
+		if !Request() {
+			h.StartProcess()
+		} else {
+			since := time.Since(h.Passwords.FechaCert)
+			days := since.Seconds() / 86400
+			if days > 175 && time.Now().Hour() == 3 {
+				if h.SolicitarSSL() {
+					h.Passwords.FechaCert = time.Now()
+					h.SaveFile()
+				}
 			}
 		}
-	}
+	*/
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
@@ -170,7 +173,7 @@ func Request() bool {
 func (h *MyHandler) StartProcess() {
 
 	fmt.Println("FUNC StartProcess")
-	cmd := exec.Command("prod")
+	cmd := exec.Command(fmt.Sprintf("%v/prod", h.Path))
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
 
 	err := cmd.Start()
@@ -208,16 +211,28 @@ func (h *MyHandler) KillProcess() bool {
 }
 func (h *MyHandler) SolicitarSSL() bool {
 	fmt.Println("FUNC SolicitarSSL")
-	if h.KillProcess() {
-		cmd := exec.Command("sh", "run.sh")
+	if h.Passwords.FechaCert.IsZero() {
+		fmt.Println("SolicitarSSL NEWCERT")
+		cmd := exec.Command("sh", fmt.Sprintf("%v/newcert.sh", h.Path))
 		_, err := cmd.Output()
 		if err != nil {
 			fmt.Println("Error al ejecutar el script:", err)
 			return false
 		}
+		h.Passwords.FechaCert = time.Now()
+		h.SaveFile()
 		return true
 	} else {
-		return false
+		fmt.Println("SolicitarSSL RE-NEWCERT")
+		cmd := exec.Command("sh", fmt.Sprintf("%v/renewcert.sh", h.Path))
+		_, err := cmd.Output()
+		if err != nil {
+			fmt.Println("Error al ejecutar el script:", err)
+			return false
+		}
+		h.Passwords.FechaCert = time.Now()
+		h.SaveFile()
+		return true
 	}
 }
 func (h *MyHandler) SaveFile() bool {
