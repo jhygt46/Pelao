@@ -59,7 +59,7 @@ func main() {
 				fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
 			} else {
 				fmt.Println("Error ... Servicio Caido, Iniciando ...")
-				pass.StartProcess()
+				//pass.StartProcess()
 			}
 		} else {
 			fmt.Println("Error ... Unmarshal datos de configuracion")
