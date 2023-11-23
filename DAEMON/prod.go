@@ -53,6 +53,8 @@ func main() {
 		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
 			fmt.Println("Ok ... Unmarshal datos de configuracion")
+			pass.Passwords.FechaCert = time.Now()
+			pass.SaveFile()
 			if pass.Request() {
 				fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
 			} else {
