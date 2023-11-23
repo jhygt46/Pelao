@@ -62,7 +62,7 @@ func main() {
 				//pass.StartProcess()
 			}
 		} else {
-			fmt.Println("Error ... Unmarshal datos de configuracion")
+			fmt.Println("Error ... Unmarshal datos de configuracion ", err)
 		}
 	} else {
 		fmt.Println("Error ... al leer archivo de configuracion", err)
