@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/smtp"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -53,12 +54,15 @@ func main() {
 		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
 		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
 			fmt.Println("Ok ... Unmarshal datos de configuracion")
-			fmt.Println(time.Since(pass.Passwords.FechaCert).Seconds())
-			if pass.Request() {
-				fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
+			if pass.Passwords.Pid == 0 {
+				pass.StartProcess()
 			} else {
-				fmt.Println("Error ... Servicio Caido, Iniciando ...")
-				//pass.StartProcess()
+				if pass.Request() {
+					fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
+				} else {
+					fmt.Println("Error ... Servicio Caido, Iniciando ...")
+					pass.RestarProcess()
+				}
 			}
 		} else {
 			fmt.Println("Error ... Unmarshal datos de configuracion ", err)
@@ -106,20 +110,19 @@ func (h *MyHandler) StartDaemon() {
 		fmt.Println("FUNC StartDaemon")
 	}
 	h.Conf.Tiempo = 15 * time.Second
-	/*
-		if !h.Request() {
-			h.StartProcess()
-		} else {
-			since := time.Since(h.Passwords.FechaCert)
-			days := since.Seconds() / 86400
-			if days > 175 && time.Now().Hour() == 3 {
-				if h.SolicitarSSL() {
-					h.Passwords.FechaCert = time.Now()
-					h.SaveFile()
-				}
+	if !h.Request() {
+		h.StartProcess()
+
+	} else {
+		since := time.Since(h.Passwords.FechaCert)
+		days := since.Seconds() / 86400
+		if days > 175 && time.Now().Hour() == 3 {
+			if h.SolicitarSSL() {
+				h.Passwords.FechaCert = time.Now()
+				h.SaveFile()
 			}
 		}
-	*/
+	}
 }
 func (c *Config) init() {
 	var tick = flag.Duration("tick", 1*time.Second, "Ticking interval")
@@ -207,7 +210,7 @@ func (h *MyHandler) StartProcess() {
 			if h.Debug == 1 || h.Debug == 3 {
 				fmt.Println("Error al esperar a que el subproceso termine:", err)
 			}
-			h.saveErrorToFile(err)
+			h.SaveErrorToFile(err)
 			return
 		}
 		if h.Debug == 1 || h.Debug == 3 {
@@ -215,48 +218,49 @@ func (h *MyHandler) StartProcess() {
 		}
 	}()
 }
-func (h *MyHandler) ResetProcess() bool {
-	return h.KillProcess()
+func (h *MyHandler) RestarProcess() bool {
+	if h.KillProcess() {
+		h.StartProcess()
+		return true
+	}
+	return false
 }
 func (h *MyHandler) KillProcess() bool {
 
-	fmt.Println("FUNC KillProcess")
-	cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", h.Passwords.Pid))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("Error al enviar la señal SIGKILL: %s\n", err)
-		return false
+	if h.Debug == 2 || h.Debug == 3 {
+		fmt.Println("FUNC KillProcess")
 	}
+
+	if h.Passwords.Pid > 0 {
+		cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", h.Passwords.Pid))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Run()
+		if err != nil {
+			if h.Debug == 1 || h.Debug == 3 {
+				fmt.Printf("Error al enviar la señal SIGKILL: %s\n", err)
+			}
+			return false
+		}
+		h.Passwords.Pid = 0
+		h.SaveFile()
+		return true
+	}
+
 	return true
 }
 func (h *MyHandler) SolicitarSSL() bool {
-	fmt.Println("FUNC SolicitarSSL")
-	if h.Passwords.FechaCert.IsZero() {
-		fmt.Println("SolicitarSSL NEWCERT")
-		cmd := exec.Command("sh", fmt.Sprintf("%v/newcert.sh", h.Path))
-		_, err := cmd.Output()
-		if err != nil {
-			fmt.Println("Error al ejecutar el script:", err)
-			return false
-		}
-		h.Passwords.FechaCert = time.Now()
-		h.SaveFile()
-		return true
-	} else {
-		fmt.Println("SolicitarSSL RE-NEWCERT")
-		cmd := exec.Command("sh", fmt.Sprintf("%v/renewcert.sh", h.Path))
-		_, err := cmd.Output()
-		if err != nil {
-			fmt.Println("Error al ejecutar el script:", err)
-			return false
-		}
-		h.Passwords.FechaCert = time.Now()
-		h.SaveFile()
-		return true
+	fmt.Println("SolicitarSSL RE-NEWCERT")
+	cmd := exec.Command("sh", fmt.Sprintf("%v/renewcert.sh", h.Path))
+	_, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Error al ejecutar el script:", err)
+		return false
 	}
+	h.Passwords.FechaCert = time.Now()
+	h.SaveFile()
+	return true
 }
 func (h *MyHandler) SaveFile() bool {
 	fmt.Println("FUNC SaveFile")
@@ -275,8 +279,8 @@ func (h *MyHandler) SaveFile() bool {
 	}
 	return true
 }
-func (h *MyHandler) saveErrorToFile(err error) {
-	fmt.Println("FUNC saveErrorToFile")
+func (h *MyHandler) SaveErrorToFile(err error) {
+	fmt.Println("FUNC SaveErrorToFile")
 	file, err := os.Create(fmt.Sprintf("%v/error.log", h.Path))
 	if err != nil {
 		fmt.Println("Error al crear el archivo de registro:", err)
@@ -287,19 +291,22 @@ func (h *MyHandler) saveErrorToFile(err error) {
 	if err != nil {
 		fmt.Println("Error al escribir en el archivo de registro:", err)
 	}
+	fmt.Printf("Error#7: %v\n", err)
 }
 
-/*
-func SendEmail(to string, subject string, body string) bool {
+func (h *MyHandler) EnviarError(err error) {
+	h.SendEmail("diego.gomez.bezmalinovic", "Fatal Error", fmt.Sprintf("%v\n", err))
+}
+
+func (h *MyHandler) SendEmail(to string, subject string, body string) bool {
 
 	from := "redigocl@gmail.com"
 	sub := fmt.Sprintf("From:%v\nTo:%v\nSubject:%v\n", from, to, subject)
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 
-	err := smtp.SendMail("smtp.gmail.com:587", smtp.PlainAuth("", from, pass.Passwords.PassEmail, "smtp.gmail.com"), from, []string{to}, []byte(sub+mime+body))
+	err := smtp.SendMail("smtp.gmail.com:587", smtp.PlainAuth("", from, h.Passwords.PassEmail, "smtp.gmail.com"), from, []string{to}, []byte(sub+mime+body))
 	if err != nil {
 		return false
 	}
 	return true
 }
-*/
