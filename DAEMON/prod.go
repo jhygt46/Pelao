@@ -23,11 +23,13 @@ type Config struct {
 	Tiempo time.Duration `json:"Tiempo"`
 }
 type MyHandler struct {
-	Conf      Config    `json:"Conf"`
-	Passwords Passwords `json:"Passwords"`
-	Path      string    `json:"Path"`
-	File      string    `json:"File"`
-	Debug     int       `json:"Debug"`
+	Conf         Config    `json:"Conf"`
+	Passwords    Passwords `json:"Passwords"`
+	Path         string    `json:"Path"`
+	File         string    `json:"File"`
+	Debug        int       `json:"Debug"`
+	UltimoEnvio  time.Time `json:"UltimoEnvio"`
+	EnviarCorreo bool      `json:"EnviarCorreo"`
 }
 type Passwords struct {
 	PassDb    string    `json:"PassDb"`
@@ -39,7 +41,7 @@ type Passwords struct {
 
 func main() {
 
-	pass := &MyHandler{Debug: 3}
+	pass := &MyHandler{Debug: 3, EnviarCorreo: false}
 
 	if runtime.GOOS == "windows" {
 		pass.File = "C:/Go/password_redigo.json"
@@ -101,7 +103,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-
 }
 
 // DAEMON //
@@ -110,6 +111,18 @@ func (h *MyHandler) StartDaemon() {
 		fmt.Println("FUNC StartDaemon")
 	}
 	h.Conf.Tiempo = 15 * time.Second
+
+	if h.EnviarCorreo {
+		if h.UltimoEnvio.IsZero() || time.Since(h.UltimoEnvio).Seconds() > 86400 {
+			if h.EnviarError() {
+				fmt.Println("CORREO ENVIADO")
+				h.EnviarCorreo = false
+			} else {
+				fmt.Println("ERROR AL ENVIAR EL ARCHIVO AL CORREO")
+			}
+		}
+	}
+
 	if !h.Request() {
 		h.StartProcess()
 
@@ -293,11 +306,29 @@ func (h *MyHandler) SaveErrorToFile(err error) {
 	}
 	fmt.Printf("Error#7: %v\n", err)
 }
+func (h *MyHandler) EnviarError() bool {
 
-func (h *MyHandler) EnviarError(err error) {
-	h.SendEmail("diego.gomez.bezmalinovic", "Fatal Error", fmt.Sprintf("%v\n", err))
+	contenido, err := ioutil.ReadFile(fmt.Sprintf("%v/error.log", h.Path))
+	if err != nil {
+		fmt.Println("Error al leer el archivo:", err)
+		return false
+	}
+
+	archivo, err := os.OpenFile(fmt.Sprintf("%v/error.log", h.Path), os.O_WRONLY|os.O_TRUNC, 0666)
+	if err != nil {
+		fmt.Println("Error al abrir el archivo para truncar:", err)
+		return false
+	}
+	defer archivo.Close()
+
+	err = archivo.Truncate(0)
+	if err != nil {
+		fmt.Println("Error al truncar el archivo:", err)
+		return false
+	}
+
+	return h.SendEmail("diego.gomez.bezmalinovic@gmail.com", "Fatal Error", string(contenido))
 }
-
 func (h *MyHandler) SendEmail(to string, subject string, body string) bool {
 
 	from := "redigocl@gmail.com"
