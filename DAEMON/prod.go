@@ -301,7 +301,7 @@ func (h *MyHandler) SaveErrorToFile(err error) {
 	}
 	defer file.Close()
 
-	fmt.Println(err)
+	fmt.Println("EEEE: ", err)
 
 	_, err = file.WriteString(fmt.Sprintf("Error: %v\n", err))
 	if err != nil {
