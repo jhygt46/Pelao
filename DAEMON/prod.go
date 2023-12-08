@@ -219,6 +219,10 @@ func (h *MyHandler) StartProcess() {
 
 	go func() {
 		err := cmd.Wait()
+
+		fmt.Println("ERROR WAIT")
+		fmt.Println(err)
+
 		if err != nil {
 			if h.Debug == 1 || h.Debug == 3 {
 				fmt.Println("Error al esperar a que el subproceso termine:", err)
@@ -293,9 +297,6 @@ func (h *MyHandler) SaveFile() bool {
 	return true
 }
 func (h *MyHandler) SaveErrorToFile(err1 error) {
-
-	fmt.Println("err1")
-	fmt.Println(err1)
 
 	fmt.Println("FUNC SaveErrorToFile")
 	file, err := os.Create(fmt.Sprintf("%v/error.log", h.Path))
