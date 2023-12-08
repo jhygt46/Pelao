@@ -198,7 +198,7 @@ func (h *MyHandler) Request() bool {
 		return false
 	}
 }
-func (h *MyHandler) StartProcess() {
+func (h *MyHandler) StartProcessResp() {
 
 	if h.Debug == 2 || h.Debug == 3 {
 		fmt.Println("FUNC StartProcess")
@@ -215,6 +215,45 @@ func (h *MyHandler) StartProcess() {
 	}
 
 	h.Passwords.Pid = cmd.Process.Pid
+	h.SaveFile()
+
+	go func() {
+		err := cmd.Wait()
+
+		fmt.Println("ERROR WAIT")
+		fmt.Println(err)
+
+		if err != nil {
+			if h.Debug == 1 || h.Debug == 3 {
+				fmt.Println("Error al esperar a que el subproceso termine:", err)
+			}
+			h.SaveErrorToFile(err)
+			return
+		}
+		if h.Debug == 1 || h.Debug == 3 {
+			fmt.Println("Subproceso completado.")
+		}
+	}()
+}
+func (h *MyHandler) StartProcess() {
+
+	if h.Debug == 2 || h.Debug == 3 {
+		fmt.Println("FUNC StartProcess")
+	}
+
+	cmd := exec.Command("sh", fmt.Sprintf("%v/startprocess.sh", h.Path))
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
+
+	err := cmd.Start()
+	if err != nil {
+		if h.Debug == 1 || h.Debug == 3 {
+			fmt.Println("Error al iniciar el subproceso:", err)
+		}
+		return
+	}
+
+	h.Passwords.Pid = cmd.Process.Pid
+	fmt.Println("PID: ", cmd.Process.Pid)
 	h.SaveFile()
 
 	go func() {
