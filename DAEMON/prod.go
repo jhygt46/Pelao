@@ -300,6 +300,9 @@ func (h *MyHandler) SaveErrorToFile(err error) {
 		return
 	}
 	defer file.Close()
+
+	fmt.Println(err)
+
 	_, err = file.WriteString(fmt.Sprintf("Error: %v\n", err))
 	if err != nil {
 		fmt.Println("Error al escribir en el archivo de registro:", err)
