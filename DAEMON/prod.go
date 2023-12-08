@@ -292,7 +292,7 @@ func (h *MyHandler) SaveFile() bool {
 	}
 	return true
 }
-func (h *MyHandler) SaveErrorToFile(err error) {
+func (h *MyHandler) SaveErrorToFile(err1 error) {
 	fmt.Println("FUNC SaveErrorToFile")
 	file, err := os.Create(fmt.Sprintf("%v/error.log", h.Path))
 	if err != nil {
@@ -300,10 +300,7 @@ func (h *MyHandler) SaveErrorToFile(err error) {
 		return
 	}
 	defer file.Close()
-
-	fmt.Println("EEEE: ", err)
-
-	_, err = file.WriteString(fmt.Sprintf("Error: %v\n", err))
+	_, err = file.WriteString(fmt.Sprintf("Error: %v\n", err1))
 	if err != nil {
 		fmt.Println("Error al escribir en el archivo de registro:", err)
 	}
