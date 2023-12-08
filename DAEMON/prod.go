@@ -41,7 +41,7 @@ type Passwords struct {
 
 func main() {
 
-	pass := &MyHandler{Debug: 3, EnviarCorreo: false}
+	pass := &MyHandler{Debug: 0, EnviarCorreo: false}
 
 	if runtime.GOOS == "windows" {
 		pass.File = "C:/Go/password_redigo.json"
@@ -293,6 +293,10 @@ func (h *MyHandler) SaveFile() bool {
 	return true
 }
 func (h *MyHandler) SaveErrorToFile(err1 error) {
+
+	fmt.Println("err1")
+	fmt.Println(err1)
+
 	fmt.Println("FUNC SaveErrorToFile")
 	file, err := os.Create(fmt.Sprintf("%v/error.log", h.Path))
 	if err != nil {
