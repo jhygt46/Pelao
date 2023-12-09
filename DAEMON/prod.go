@@ -198,43 +198,6 @@ func (h *MyHandler) Request() bool {
 		return false
 	}
 }
-func (h *MyHandler) StartProcessResp() {
-
-	if h.Debug == 2 || h.Debug == 3 {
-		fmt.Println("FUNC StartProcess")
-	}
-	cmd := exec.Command(fmt.Sprintf("%v/prod", h.Path))
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
-
-	err := cmd.Start()
-	if err != nil {
-		if h.Debug == 1 || h.Debug == 3 {
-			fmt.Println("Error al iniciar el subproceso:", err)
-		}
-		return
-	}
-
-	h.Passwords.Pid = cmd.Process.Pid
-	h.SaveFile()
-
-	go func() {
-		err := cmd.Wait()
-
-		fmt.Println("ERROR WAIT")
-		fmt.Println(err)
-
-		if err != nil {
-			if h.Debug == 1 || h.Debug == 3 {
-				fmt.Println("Error al esperar a que el subproceso termine:", err)
-			}
-			h.SaveErrorToFile(err)
-			return
-		}
-		if h.Debug == 1 || h.Debug == 3 {
-			fmt.Println("Subproceso completado.")
-		}
-	}()
-}
 func (h *MyHandler) StartProcess() {
 
 	if h.Debug == 2 || h.Debug == 3 {
@@ -252,21 +215,20 @@ func (h *MyHandler) StartProcess() {
 		return
 	}
 
+	fmt.Printf("START PROCESS - PID ANTIGUO (%v) - ", h.Passwords.Pid)
+
 	h.Passwords.Pid = cmd.Process.Pid
-	fmt.Println("PID: ", cmd.Process.Pid)
 	h.SaveFile()
+
+	fmt.Printf("PID NUEVO (%v) \n", cmd.Process.Pid)
 
 	go func() {
 		err := cmd.Wait()
-
-		fmt.Println("ERROR WAIT")
-		fmt.Println(err)
-
 		if err != nil {
+			fmt.Println("Error Process: ", err)
 			if h.Debug == 1 || h.Debug == 3 {
 				fmt.Println("Error al esperar a que el subproceso termine:", err)
 			}
-			h.SaveErrorToFile(err)
 			return
 		}
 		if h.Debug == 1 || h.Debug == 3 {
@@ -318,8 +280,9 @@ func (h *MyHandler) SolicitarSSL() bool {
 	h.SaveFile()
 	return true
 }
+
 func (h *MyHandler) SaveFile() bool {
-	fmt.Println("FUNC SaveFile")
+
 	archivo, err := os.Create(h.File)
 	if err != nil {
 		fmt.Println("Error al crear el archivo:", err)
@@ -335,20 +298,18 @@ func (h *MyHandler) SaveFile() bool {
 	}
 	return true
 }
-func (h *MyHandler) SaveErrorToFile(err1 error) {
+func (h *MyHandler) SendEmail(to string, subject string, body string) bool {
 
-	fmt.Println("FUNC SaveErrorToFile")
-	file, err := os.Create(fmt.Sprintf("%v/error.log", h.Path))
+	from := "redigocl@gmail.com"
+	sub := fmt.Sprintf("From:%v\nTo:%v\nSubject:%v\n", from, to, subject)
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+
+	err := smtp.SendMail("smtp.gmail.com:587", smtp.PlainAuth("", from, h.Passwords.PassEmail, "smtp.gmail.com"), from, []string{to}, []byte(sub+mime+body))
 	if err != nil {
-		fmt.Println("Error al crear el archivo de registro:", err)
-		return
+		return false
 	}
-	defer file.Close()
-	_, err = file.WriteString(fmt.Sprintf("Error: %v\n", err1))
-	if err != nil {
-		fmt.Println("Error al escribir en el archivo de registro:", err)
-	}
-	fmt.Printf("Error#7: %v\n", err)
+	fmt.Println("CORREO ENVIADO A ", to)
+	return true
 }
 func (h *MyHandler) EnviarError() bool {
 
@@ -372,16 +333,4 @@ func (h *MyHandler) EnviarError() bool {
 	}
 
 	return h.SendEmail("diego.gomez.bezmalinovic@gmail.com", "Fatal Error", string(contenido))
-}
-func (h *MyHandler) SendEmail(to string, subject string, body string) bool {
-
-	from := "redigocl@gmail.com"
-	sub := fmt.Sprintf("From:%v\nTo:%v\nSubject:%v\n", from, to, subject)
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-
-	err := smtp.SendMail("smtp.gmail.com:587", smtp.PlainAuth("", from, h.Passwords.PassEmail, "smtp.gmail.com"), from, []string{to}, []byte(sub+mime+body))
-	if err != nil {
-		return false
-	}
-	return true
 }
