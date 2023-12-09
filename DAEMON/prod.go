@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -15,6 +16,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -61,7 +63,8 @@ func main() {
 			} else {
 				if pass.Request() {
 					fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
-					pass.RestarProcess()
+					//pass.RestarProcess()
+					pass.GetProcess()
 				} else {
 					fmt.Println("Error ... Servicio Caido, Iniciando ...")
 					pass.StartProcess()
@@ -265,6 +268,41 @@ func (h *MyHandler) KillProcess() bool {
 	}
 
 	return true
+}
+func (h *MyHandler) GetProcess() {
+
+	// Ejecutar el comando netstat para obtener información sobre las conexiones de red
+	netstatCmd := exec.Command("netstat", "-tulpn")
+
+	// Crear un buffer para almacenar la salida del comando
+	var netstatOutput bytes.Buffer
+
+	// Asignar el buffer como salida estándar para el comando
+	netstatCmd.Stdout = &netstatOutput
+
+	// Ejecutar el comando netstat
+	if err := netstatCmd.Run(); err != nil {
+		fmt.Println("Error ejecutando netstat:", err)
+		return
+	}
+
+	// Buscar la línea que contiene el puerto 80 en la salida de netstat
+	var processID string
+	lines := strings.Split(netstatOutput.String(), "\n")
+	for _, line := range lines {
+		if strings.Contains(line, ":80") {
+			fields := strings.Fields(line)
+			processID = fields[len(fields)-1]
+			break
+		}
+	}
+
+	// Imprimir el ID del proceso
+	if processID != "" {
+		fmt.Println("El ID del proceso que ocupa el puerto 80 es:", processID)
+	} else {
+		fmt.Println("No se encontró un proceso utilizando el puerto 80.")
+	}
 }
 func (h *MyHandler) SolicitarSSL() bool {
 	fmt.Println("SolicitarSSL RE-NEWCERT")
