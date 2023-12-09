@@ -61,9 +61,10 @@ func main() {
 			} else {
 				if pass.Request() {
 					fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
+					pass.RestarProcess()
 				} else {
 					fmt.Println("Error ... Servicio Caido, Iniciando ...")
-					pass.RestarProcess()
+					pass.StartProcess()
 				}
 			}
 		} else {
