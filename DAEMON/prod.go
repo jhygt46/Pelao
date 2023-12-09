@@ -238,8 +238,11 @@ func (h *MyHandler) StartProcess() {
 }
 func (h *MyHandler) RestarProcess() bool {
 	if h.KillProcess() {
+		fmt.Println("KILL PROCESS TRUE")
 		h.StartProcess()
 		return true
+	} else {
+		fmt.Println("KILL PROCESS FALSE")
 	}
 	return false
 }
