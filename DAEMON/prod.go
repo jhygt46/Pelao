@@ -230,6 +230,7 @@ func (h *MyHandler) EnviarError() error {
 		if err = h.SendEmail("diego.gomez.bezmalinovic@gmail.com", "Fatal Error", string(contenido)); err == nil {
 			h.Passwords.UltimoEnvio = time.Now()
 			h.SaveFile()
+			fmt.Println("CORREO ENVIADO CON EXITO")
 			return nil
 		} else {
 			h.InsertError(13, err)
