@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -19,31 +20,30 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Config struct {
 	Tiempo time.Duration `json:"Tiempo"`
 }
 type MyHandler struct {
-	Conf         Config    `json:"Conf"`
-	Passwords    Passwords `json:"Passwords"`
-	Path         string    `json:"Path"`
-	File         string    `json:"File"`
-	Debug        int       `json:"Debug"`
-	UltimoEnvio  time.Time `json:"UltimoEnvio"`
-	EnviarCorreo bool      `json:"EnviarCorreo"`
+	Conf      Config    `json:"Conf"`
+	Passwords Passwords `json:"Passwords"`
+	Path      string    `json:"Path"`
+	File      string    `json:"File"`
 }
 type Passwords struct {
-	PassDb    string    `json:"PassDb"`
-	PassEmail string    `json:"PassEmail"`
-	Gmapkey   string    `json:"Gmapkey"`
-	FechaCert time.Time `json:"FechaCert"`
-	Pid       int       `json:"Pid"`
+	PassDb      string    `json:"PassDb"`
+	PassEmail   string    `json:"PassEmail"`
+	Gmapkey     string    `json:"Gmapkey"`
+	FechaCert   time.Time `json:"FechaCert"`
+	UltimoEnvio time.Time `json:"UltimoEnvio"`
 }
 
 func main() {
 
-	pass := &MyHandler{Debug: 0, EnviarCorreo: false}
+	pass := &MyHandler{}
 
 	if runtime.GOOS == "windows" {
 		pass.File = "C:/Go/password_redigo.json"
@@ -55,25 +55,12 @@ func main() {
 
 	passwords, err := os.ReadFile(pass.File)
 	if err == nil {
-		fmt.Println("Ok ... Archivo de Configuracion leido correctamente")
-		if err := json.Unmarshal(passwords, &pass.Passwords); err == nil {
-			fmt.Println("Ok ... Unmarshal datos de configuracion")
-			if pass.Passwords.Pid == 0 {
-				pass.StartProcess()
-			} else {
-				if pass.Request() {
-					fmt.Println("Ok ... Servicio Arriba, Reiniciando ...")
-					//pass.RestarProcess()
-					pass.GetProcess()
-				} else {
-					fmt.Println("Error ... Servicio Caido, Iniciando ...")
-					pass.StartProcess()
-				}
-			}
-		} else {
+		if err := json.Unmarshal(passwords, &pass.Passwords); err != nil {
+			pass.InsertError(23, fmt.Errorf("Error ... Unmarshal datos de configuracion"))
 			fmt.Println("Error ... Unmarshal datos de configuracion ", err)
 		}
 	} else {
+		pass.InsertError(24, fmt.Errorf("Error ... al leer archivo de configuracion"))
 		fmt.Println("Error ... al leer archivo de configuracion", err)
 	}
 
@@ -111,33 +98,20 @@ func main() {
 
 // DAEMON //
 func (h *MyHandler) StartDaemon() {
-	if h.Debug == 2 {
-		fmt.Println("FUNC StartDaemon")
-	}
 	h.Conf.Tiempo = 15 * time.Second
-
-	if h.EnviarCorreo {
-		if h.UltimoEnvio.IsZero() || time.Since(h.UltimoEnvio).Seconds() > 86400 {
-			if h.EnviarError() {
-				fmt.Println("CORREO ENVIADO")
-				h.EnviarCorreo = false
-			} else {
-				fmt.Println("ERROR AL ENVIAR EL ARCHIVO AL CORREO")
-			}
-		}
-	}
-
 	if !h.Request() {
 		h.StartProcess()
-
-	} else {
-		since := time.Since(h.Passwords.FechaCert)
-		days := since.Seconds() / 86400
-		if days > 175 && time.Now().Hour() == 3 {
-			if h.SolicitarSSL() {
-				h.Passwords.FechaCert = time.Now()
-				h.SaveFile()
-			}
+		h.EnviarError()
+	}
+	since := time.Since(h.Passwords.FechaCert)
+	days := since.Seconds() / 86400
+	if days > 175 && time.Now().Hour() == 3 {
+		if err := h.SolicitarSSL(); err == nil {
+			h.Passwords.FechaCert = time.Now()
+			h.SaveFile()
+		} else {
+			h.InsertError(22, err)
+			fmt.Println("ERROR AL RENOVAR EL CERTIFICADO: ", err)
 		}
 	}
 }
@@ -159,9 +133,6 @@ func run(con context.Context, c *MyHandler, stdout io.Writer) error {
 }
 func (h *MyHandler) Request() bool {
 
-	if h.Debug == 2 {
-		fmt.Println("FUNC Request")
-	}
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -169,26 +140,23 @@ func (h *MyHandler) Request() bool {
 
 	r, err := client.Get("https://localhost/RCPG47D4F1AZS5")
 	if err != nil {
-		if h.Debug == 1 {
-			fmt.Println("Error al realizar la solicitud HTTP:", err)
-		}
+		h.InsertError(17, err)
+		fmt.Println("Error al realizar la solicitud HTTP:", err)
 		return false
 	}
 	defer r.Body.Close() // Cerrar el cuerpo de la respuesta al finalizar la función
 
 	// Verificar el código de estado de la respuesta
 	if r.StatusCode != http.StatusOK {
-		if h.Debug == 1 {
-			fmt.Printf("Respuesta no exitosa. Código de estado: %d\n", r.StatusCode)
-		}
+		h.InsertError(18, err)
+		fmt.Printf("Respuesta no exitosa. Código de estado: %d\n", r.StatusCode)
 		return false
 	}
 
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		if h.Debug == 1 {
-			fmt.Println("Error al leer el cuerpo de la respuesta:", err)
-		}
+		h.InsertError(19, err)
+		fmt.Println("Error al leer el cuerpo de la respuesta:", err)
 		return false
 	}
 
@@ -196,97 +164,156 @@ func (h *MyHandler) Request() bool {
 		if bodyBytes[0] == 1 {
 			return true
 		} else {
+			h.InsertError(20, fmt.Errorf("Error Respuesta #1"))
+			fmt.Println("Error en respuesta #1")
 			return false
 		}
 	} else {
+		h.InsertError(21, fmt.Errorf("Error Respuesta #2"))
+		fmt.Println("Error en respuesta #2")
 		return false
 	}
 }
 func (h *MyHandler) StartProcess() {
-
-	if h.Debug == 2 || h.Debug == 3 {
-		fmt.Println("FUNC StartProcess")
-	}
 
 	cmd := exec.Command("sh", fmt.Sprintf("%v/startprocess.sh", h.Path))
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: 0}
 
 	err := cmd.Start()
 	if err != nil {
-		if h.Debug == 1 || h.Debug == 3 {
-			fmt.Println("Error al iniciar el subproceso:", err)
-		}
+		h.InsertError(15, err)
+		fmt.Println("ERROR AL INICIAR EL SUBPROCESO: ", err)
 		return
 	}
-
-	fmt.Printf("START PROCESS - PID ANTIGUO (%v) - ", h.Passwords.Pid)
-
-	h.Passwords.Pid = cmd.Process.Pid
-	h.SaveFile()
-
-	fmt.Printf("PID NUEVO (%v) \n", cmd.Process.Pid)
 
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			fmt.Println("Error Process: ", err)
-			if h.Debug == 1 || h.Debug == 3 {
-				fmt.Println("Error al esperar a que el subproceso termine:", err)
-			}
+			h.InsertError(16, err)
+			fmt.Println("ERROR PROCESS: ", err)
 			return
-		}
-		if h.Debug == 1 || h.Debug == 3 {
-			fmt.Println("Subproceso completado.")
 		}
 	}()
 }
 func (h *MyHandler) RestarProcess() {
-	h.KillProcess()
-	h.StartProcess()
-}
-func (h *MyHandler) KillProcess() bool {
-
-	if h.Debug == 2 || h.Debug == 3 {
-		fmt.Println("FUNC KillProcess")
+	err := h.KillProcess()
+	if err == nil {
+		h.InsertError(14, err)
+		h.StartProcess()
+	} else {
+		fmt.Println(err)
 	}
+}
+func (h *MyHandler) EnviarError() error {
 
-	if h.Passwords.Pid > 0 {
-		cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", h.Passwords.Pid))
+	if h.Passwords.UltimoEnvio.IsZero() || time.Since(h.Passwords.UltimoEnvio).Seconds() > 86400 {
+
+		contenido, err := ioutil.ReadFile(fmt.Sprintf("%v/error.log", h.Path))
+		if err != nil {
+			h.InsertError(10, err)
+			return fmt.Errorf("ERROR AL LEER EL ARCHIVO: %s\n", err)
+		}
+
+		archivo, err := os.OpenFile(fmt.Sprintf("%v/error.log", h.Path), os.O_WRONLY|os.O_TRUNC, 0666)
+		if err != nil {
+			h.InsertError(11, err)
+			return fmt.Errorf("ERROR AL ABRIR EL ARCHIVO PARA TRUNCAR: %s\n", err)
+		}
+		defer archivo.Close()
+
+		err = archivo.Truncate(0)
+		if err != nil {
+			h.InsertError(12, err)
+			return fmt.Errorf("ERROR AL VACIAR ARCHIVO: %s\n", err)
+		}
+
+		if err = h.SendEmail("diego.gomez.bezmalinovic@gmail.com", "Fatal Error", string(contenido)); err == nil {
+			h.Passwords.UltimoEnvio = time.Now()
+			h.SaveFile()
+			return nil
+		} else {
+			h.InsertError(13, err)
+			return fmt.Errorf("ERROR AL ENVIAR CORREO: %s\n", err)
+		}
+
+	} else {
+		return fmt.Errorf("AUN NO PASAN 24hrs PARA ENVIAR OTRO CORREO \n")
+	}
+}
+func (h *MyHandler) SendEmail(to string, subject string, body string) error {
+
+	from := "redigocl@gmail.com"
+	sub := fmt.Sprintf("From:%v\nTo:%v\nSubject:%v\n", from, to, subject)
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+
+	err := smtp.SendMail("smtp.gmail.com:587", smtp.PlainAuth("", from, h.Passwords.PassEmail, "smtp.gmail.com"), from, []string{to}, []byte(sub+mime+body))
+	if err != nil {
+		h.InsertError(9, err)
+		return err
+	}
+	return nil
+}
+func (h *MyHandler) SolicitarSSL() error {
+
+	cmd := exec.Command("sh", fmt.Sprintf("%v/renewcert.sh", h.Path))
+	_, err := cmd.Output()
+	if err != nil {
+		h.InsertError(6, err)
+		return fmt.Errorf("ERROR AL EJECUTAR RENEWCERT: %s\n", err)
+	}
+	h.Passwords.FechaCert = time.Now()
+	err = h.SaveFile()
+	if err == nil {
+		return nil
+	} else {
+		h.InsertError(7, err)
+		return err
+	}
+}
+func (h *MyHandler) SaveFile() error {
+
+	archivo, err := os.Create(h.File)
+	if err != nil {
+		h.InsertError(4, err)
+		return fmt.Errorf("ERROR AL CREAR EL ARCHIVO: %s\n", err)
+	}
+	defer archivo.Close()
+
+	encoder := json.NewEncoder(archivo)
+	err = encoder.Encode(h.Passwords)
+	if err != nil {
+		h.InsertError(5, err)
+		return fmt.Errorf("ERROR AL CODIFICAR LA ESTRUCTURA: %s\n", err)
+	}
+	return nil
+}
+func (h *MyHandler) KillProcess() error {
+	Pid := h.GetProcess()
+	if Pid > 0 {
+		cmd := exec.Command("kill", "-9", fmt.Sprintf("%d", Pid))
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-
 		err := cmd.Run()
 		if err != nil {
-			if h.Debug == 1 || h.Debug == 3 {
-				fmt.Printf("Error al enviar la señal SIGKILL: %s\n", err)
-			}
-			return false
+			h.InsertError(2, err)
+			return fmt.Errorf("ERROR RUNNING KILL PROCESS: %s\n", err)
 		}
-		h.Passwords.Pid = 0
-		h.SaveFile()
-		return true
+		return nil
+	} else {
+		h.InsertError(3, fmt.Errorf("ERROR PID 0"))
+		return fmt.Errorf("ERROR PID 0\n")
 	}
-
-	return true
 }
-func (h *MyHandler) GetProcess() {
+func (h *MyHandler) GetProcess() int {
 
-	// Ejecutar el comando netstat para obtener información sobre las conexiones de red
 	netstatCmd := exec.Command("netstat", "-tulpn")
-
-	// Crear un buffer para almacenar la salida del comando
 	var netstatOutput bytes.Buffer
-
-	// Asignar el buffer como salida estándar para el comando
 	netstatCmd.Stdout = &netstatOutput
-
-	// Ejecutar el comando netstat
 	if err := netstatCmd.Run(); err != nil {
 		fmt.Println("Error ejecutando netstat:", err)
-		return
+		h.InsertError(1, err)
+		return 0
 	}
-
-	// Buscar la línea que contiene el puerto 80 en la salida de netstat
 	var processID string
 	lines := strings.Split(netstatOutput.String(), "\n")
 	for _, line := range lines {
@@ -296,77 +323,41 @@ func (h *MyHandler) GetProcess() {
 			break
 		}
 	}
-
-	// Imprimir el ID del proceso
 	if processID != "" {
-		fmt.Println("El ID del proceso que ocupa el puerto 80 es:", processID)
+		return GetPNum(processID)
 	} else {
-		fmt.Println("No se encontró un proceso utilizando el puerto 80.")
+		return 0
 	}
 }
-func (h *MyHandler) SolicitarSSL() bool {
-	fmt.Println("SolicitarSSL RE-NEWCERT")
-	cmd := exec.Command("sh", fmt.Sprintf("%v/renewcert.sh", h.Path))
-	_, err := cmd.Output()
-	if err != nil {
-		fmt.Println("Error al ejecutar el script:", err)
-		return false
+func GetPNum(p string) int {
+	var x int
+	for _, c := range p {
+		if c > 47 && c < 58 {
+			x = x*10 + int(c-'0')
+		}
+		if c == 47 {
+			return x
+		}
 	}
-	h.Passwords.FechaCert = time.Now()
-	h.SaveFile()
-	return true
+	return x
 }
-
-func (h *MyHandler) SaveFile() bool {
-
-	archivo, err := os.Create(h.File)
-	if err != nil {
-		fmt.Println("Error al crear el archivo:", err)
-		return false
-	}
-	defer archivo.Close()
-
-	encoder := json.NewEncoder(archivo)
-	err = encoder.Encode(h.Passwords)
-	if err != nil {
-		fmt.Println("Error al codificar la estructura:", err)
-		return false
-	}
-	return true
+func (h *MyHandler) GetMySQLDB() (db *sql.DB, err error) {
+	//CREATE DATABASE redigo CHARACTER SET utf8 COLLATE utf8_spanish2_ci;
+	db, err = sql.Open("mysql", fmt.Sprintf("root:%v@tcp(127.0.0.1:3306)/redigo", h.Passwords.PassDb))
+	return
 }
-func (h *MyHandler) SendEmail(to string, subject string, body string) bool {
+func (h *MyHandler) InsertError(tipo int, errno error) {
 
-	from := "redigocl@gmail.com"
-	sub := fmt.Sprintf("From:%v\nTo:%v\nSubject:%v\n", from, to, subject)
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-
-	err := smtp.SendMail("smtp.gmail.com:587", smtp.PlainAuth("", from, h.Passwords.PassEmail, "smtp.gmail.com"), from, []string{to}, []byte(sub+mime+body))
-	if err != nil {
-		return false
-	}
-	fmt.Println("CORREO ENVIADO A ", to)
-	return true
+	db, err := h.GetMySQLDB()
+	ErrorCheck(err)
+	stmt, err := db.Prepare("INSERT INTO errores (tipo, nombre, fecha) VALUES (?,?,Now())")
+	ErrorCheck(err)
+	defer stmt.Close()
+	_, err = stmt.Exec(tipo, errno)
+	ErrorCheck(err)
 }
-func (h *MyHandler) EnviarError() bool {
-
-	contenido, err := ioutil.ReadFile(fmt.Sprintf("%v/error.log", h.Path))
-	if err != nil {
-		fmt.Println("Error al leer el archivo:", err)
-		return false
+func ErrorCheck(e error) {
+	if e != nil {
+		fmt.Println("ERROR:", e)
 	}
-
-	archivo, err := os.OpenFile(fmt.Sprintf("%v/error.log", h.Path), os.O_WRONLY|os.O_TRUNC, 0666)
-	if err != nil {
-		fmt.Println("Error al abrir el archivo para truncar:", err)
-		return false
-	}
-	defer archivo.Close()
-
-	err = archivo.Truncate(0)
-	if err != nil {
-		fmt.Println("Error al truncar el archivo:", err)
-		return false
-	}
-
-	return h.SendEmail("diego.gomez.bezmalinovic@gmail.com", "Fatal Error", string(contenido))
 }
