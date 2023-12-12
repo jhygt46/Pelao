@@ -357,7 +357,7 @@ func (h *MyHandler) InsertError(tipo int, errno error) {
 	stmt, err := db.Prepare("INSERT INTO errores (tipo, nombre, fecha) VALUES (?,?,Now())")
 	ErrorCheck(err)
 	defer stmt.Close()
-	_, err = stmt.Exec(tipo, errno)
+	_, err = stmt.Exec(tipo, fmt.Sprintf("%s", errno))
 	ErrorCheck(err)
 }
 func ErrorCheck(e error) {
