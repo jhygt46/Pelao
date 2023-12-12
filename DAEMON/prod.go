@@ -58,6 +58,9 @@ func main() {
 		if err := json.Unmarshal(passwords, &pass.Passwords); err != nil {
 			pass.InsertError(23, fmt.Errorf("Error ... Unmarshal datos de configuracion"))
 			fmt.Println("Error ... Unmarshal datos de configuracion ", err)
+		} else {
+			pass.Passwords.FechaCert = time.Now()
+			pass.SaveFile()
 		}
 	} else {
 		pass.InsertError(24, fmt.Errorf("Error ... al leer archivo de configuracion"))

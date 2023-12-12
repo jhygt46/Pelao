@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 21-11-2023 a las 00:57:24
+-- Tiempo de generación: 12-12-2023 a las 00:28:53
 -- Versión del servidor: 8.0.17
 -- Versión de PHP: 7.3.10
 
@@ -241,6 +241,19 @@ CREATE TABLE `empresa` (
 
 INSERT INTO `empresa` (`id_emp`, `nombre`, `precio`, `eliminado`) VALUES
 (1, 'Buena', 0.56, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `errores`
+--
+
+CREATE TABLE `errores` (
+  `id_err` int(4) NOT NULL,
+  `tipo` smallint(2) NOT NULL,
+  `nombre` text COLLATE utf8_spanish2_ci NOT NULL,
+  `fecha` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 -- --------------------------------------------------------
 
@@ -696,6 +709,12 @@ ALTER TABLE `empresa`
   ADD PRIMARY KEY (`id_emp`);
 
 --
+-- Indices de la tabla `errores`
+--
+ALTER TABLE `errores`
+  ADD PRIMARY KEY (`id_err`);
+
+--
 -- Indices de la tabla `paises`
 --
 ALTER TABLE `paises`
@@ -829,6 +848,12 @@ ALTER TABLE `diagnostico`
 --
 ALTER TABLE `empresa`
   MODIFY `id_emp` int(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `errores`
+--
+ALTER TABLE `errores`
+  MODIFY `id_err` int(4) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `paises`
